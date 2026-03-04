@@ -65,6 +65,9 @@
 
   function renderList() {
     const list = getRecords();
+    var sorted = list.slice().sort(function (a, b) {
+      return (b.date || '').localeCompare(a.date || '');
+    });
     const thisYearList = recordsThisYear(list);
     const total = thisYearList.reduce(function (sum, r) { return sum + (r.amount || 0); }, 0);
     const totalEl = document.getElementById('total-amount');
@@ -75,13 +78,24 @@
     totalEl.className = 'summary-amount ' + (total >= 0 ? 'positive' : 'negative');
 
     listEl.innerHTML = '';
-    if (list.length === 0) {
+    if (sorted.length === 0) {
       emptyEl.classList.add('visible');
       return;
     }
     emptyEl.classList.remove('visible');
 
-    list.forEach(function (r) {
+    var prevYear = null;
+    sorted.forEach(function (r) {
+      var year = (r.date || '').slice(0, 4);
+      if (prevYear !== null && year !== prevYear) {
+        var divLi = document.createElement('li');
+        divLi.className = 'year-divider';
+        divLi.setAttribute('aria-hidden', 'true');
+        divLi.innerHTML = '<span class="year-divider-line"></span><span class="year-divider-text">' + escapeHtml(year ? year + '年' : '') + '</span><span class="year-divider-line"></span>';
+        listEl.appendChild(divLi);
+      }
+      prevYear = year;
+
       const li = document.createElement('li');
       li.className = 'record-item';
       li.setAttribute('data-id', r.id);
