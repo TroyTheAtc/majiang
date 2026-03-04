@@ -78,16 +78,13 @@ git push -u origin main
 
 ## 六、以后更新页面怎么操作
 
-改完本地文件后，在项目目录执行：
+改完本地文件后，复制下面整行到终端执行，即可让公网生效（约 1～2 分钟）：
 
 ```bash
-cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG"
-git add .
-git commit -m "更新说明（随便写）"
-git push
+cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git commit -m "更新" && git push
 ```
 
-推送完成后，GitHub Pages 会自动重新部署，一般 1～2 分钟内生效。
+若想写具体更新说明，把 `-m "更新"` 改成例如 `-m "优化背景图加载"` 即可。推送完成后，GitHub Pages 会自动重新部署。
 
 ---
 

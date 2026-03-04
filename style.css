@@ -96,16 +96,22 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 12px 16px var(--safe-top);
-  padding-top: calc(12px + var(--safe-top));
-  background: rgba(139, 0, 0, 0.72);
-  backdrop-filter: blur(6px);
+  padding: 12px 16px 18px;
+  padding-top: calc(24px + var(--safe-top));
+  background: linear-gradient(180deg,
+    var(--red-main) 0%,
+    var(--red-light) 35%,
+    rgba(139, 0, 0, 0.5) 65%,
+    rgba(139, 0, 0, 0.2) 85%,
+    transparent 100%);
+  background-size: 100% 140%;
+  background-position: top;
   color: #fff;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 12px 36px -10px rgba(139, 0, 0, 0.28);
 }
 
 .logo {
-  margin: 0 0 12px 0;
+  margin: 0 0 14px 0;
   font-size: 1.35rem;
   font-weight: 700;
   display: flex;
@@ -150,30 +156,36 @@ body {
   display: flex;
   gap: 8px;
   justify-content: center;
+  padding-top: 14px;
 }
 
 .tab {
   min-height: var(--tap-min);
-  padding: 0 20px;
+  padding: 0 18px;
   font-size: 0.95rem;
-  color: rgba(255,255,255,0.85);
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: var(--radius);
+  color: #5c3d0a;
+  background: linear-gradient(165deg, #fdf8f0 0%, #f5ecd8 50%, #f0e6d0 100%);
+  border: 1.5px solid var(--tile-border);
+  border-radius: var(--radius-tile);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
 }
 
 .tab:hover, .tab:focus-visible {
-  background: rgba(255,255,255,0.25);
-  color: #fff;
+  background: linear-gradient(165deg, #fff9f0 0%, #f8f0e0 50%, #f0e6d0 100%);
+  border-color: var(--gold-light);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.7);
 }
 
 .tab.active {
-  background: #fff;
-  color: var(--red-main);
-  border-color: #fff;
+  background: linear-gradient(165deg, #f5e6b8 0%, #e8d48a 40%, #d4af37 100%);
+  color: #4a3208;
+  border-color: #c9a227;
   font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -1px 2px rgba(0,0,0,0.06);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
 }
 
 /* ========== 主内容区 ========== */
@@ -328,7 +340,7 @@ body {
 
 /* ========== 新增表单 ========== */
 .form-add {
-  padding: 0 0 24px;
+  padding: 24px 20px 28px;
 }
 
 .field {
@@ -342,6 +354,41 @@ body {
   color: var(--red-main);
   margin-bottom: 8px;
   text-align: center;
+}
+
+.field > label {
+  font-size: 1.17rem;
+  letter-spacing: 0.24em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.field > label::before {
+  content: " · ";
+  display: inline-block;
+  width: 36px;
+  text-align: right;
+  color: rgba(212, 175, 55, 0.7);
+  font-weight: 400;
+  background: linear-gradient(to right, rgba(212, 175, 55, 0.72) 0, rgba(212, 175, 55, 0.72) 28px, transparent 28px);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 28px 1px;
+  margin-right: 2px;
+}
+
+.field > label::after {
+  content: " · ";
+  display: inline-block;
+  width: 36px;
+  text-align: left;
+  color: rgba(212, 175, 55, 0.7);
+  font-weight: 400;
+  background: linear-gradient(to left, rgba(212, 175, 55, 0.72) 0, rgba(212, 175, 55, 0.72) 28px, transparent 28px);
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 28px 1px;
+  margin-left: 2px;
 }
 
 .field input[type="date"],
@@ -374,14 +421,21 @@ body {
   align-items: center;
   justify-content: center;
   min-height: var(--tap-min);
-  padding: 0 16px;
-  font-size: 0.95rem;
+  padding: 8px 16px 12px;
+  font-size: 1.05rem;
+  line-height: 1;
+  letter-spacing: 0.12em;
   text-align: center;
   background: var(--tile-bg);
   border: 1px solid var(--tile-border);
-  border-radius: 999px;
+  border-radius: var(--radius-tile);
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
+}
+
+.chip span {
+  display: inline-block;
+  transform: translateY(6px);
 }
 
 .chip input {
@@ -401,11 +455,15 @@ body {
 .chip-loss:has(input:checked) { background: var(--loss); border-color: var(--loss); }
 
 .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   min-height: var(--tap-min);
   padding: 0 24px;
   font-size: 1rem;
   font-weight: 600;
+  line-height: 1;
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
@@ -484,16 +542,29 @@ body {
   font-weight: 600;
 }
 
+.stats-by-category {
+  text-align: center;
+}
+
 .stats-by-category h3 {
+  display: inline-block;
   margin: 0 0 12px 0;
-  font-size: 1rem;
-  color: var(--red-main);
+  padding: 10px 14px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(139, 0, 0, 0.88) 0%, rgba(165, 42, 42, 0.85) 100%);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  letter-spacing: 0.15em;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
 
 .stats-by-category ul {
   list-style: none;
   margin: 0;
   padding: 0;
+  text-align: left;
 }
 
 .stats-category-item {

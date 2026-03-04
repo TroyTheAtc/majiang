@@ -96,10 +96,8 @@
     var start = new Date(now.getFullYear(), 0, 1);
     if (period === 'month') {
       start = new Date(now.getFullYear(), now.getMonth(), 1);
-    } else if (period === 'week') {
-      var day = now.getDay();
-      var diff = now.getDate() - day + (day === 0 ? -6 : 1);
-      start = new Date(now.getFullYear(), now.getMonth(), diff);
+    } else if (period === 'year') {
+      start = new Date(now.getFullYear(), 0, 1);
     }
     return { start: start, end: new Date(now.getTime() + 86400000) };
   }
