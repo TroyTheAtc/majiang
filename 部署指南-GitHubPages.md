@@ -33,27 +33,20 @@
 
 ## 三、在本地用 Git 提交并推送到 GitHub
 
-在终端中进入项目目录，依次执行：
+在终端中进入项目目录，依次执行（**只复制下面每行命令，不要复制以 # 开头的说明行**）：
 
 ```bash
 cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG"
-
-# 1. 初始化仓库（若已初始化可跳过）
 git init
-
-# 2. 添加所有文件
 git add .
-
-# 3. 第一次提交
 git commit -m "老婆的麻将日记 H5 初版"
-
-# 4. 添加 GitHub 远程仓库
+git remote remove origin
 git remote add origin https://github.com/TroyTheAtc/majiang.git
-
-# 5. 推送到 GitHub（主分支名为 main）
 git branch -M main
 git push -u origin main
 ```
+
+若之前没添加过远程，可省略 `git remote remove origin`；若提示 `origin already exists`，先执行 `git remote remove origin` 再执行 `git remote add origin ...`。
 
 若提示输入账号密码：GitHub 已不支持密码推送，请使用 **Personal Access Token**（在 GitHub → Settings → Developer settings → Personal access tokens 里生成，勾选 `repo` 权限），在密码处粘贴 Token。
 
