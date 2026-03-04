@@ -7,11 +7,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>老婆的麻将日记</title>
-  <link rel="preload" href="c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.1" as="image" />
+  <link rel="preload" href="c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.2" as="image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=1.1" />
+  <link rel="stylesheet" href="style.css?v=1.2" />
 </head>
 <body>
   <div class="app">
@@ -33,7 +33,7 @@
       <!-- 记录列表视图 -->
       <section id="view-list" class="view view-list active">
         <div class="list-summary">
-          <span class="summary-label">当前总输赢</span>
+          <span class="summary-label">今年战绩</span>
           <span id="total-amount" class="summary-amount">0</span>
         </div>
         <ul id="record-list" class="record-list"></ul>
@@ -79,13 +79,12 @@
           <span class="stats-total-label">总输赢</span>
           <span id="stats-total-amount" class="stats-total-amount">0</span>
         </div>
-        <div class="stats-period">
-          <button type="button" class="period-btn active" data-period="all">全部</button>
-          <button type="button" class="period-btn" data-period="month">本月</button>
-          <button type="button" class="period-btn" data-period="year">本年</button>
-        </div>
-        <div class="stats-by-category">
-          <h3>按对象统计</h3>
+        <div class="stats-by">
+          <div class="stats-type-tabs">
+            <button type="button" class="stats-type-btn active" data-type="category">按对象统计</button>
+            <button type="button" class="stats-type-btn" data-type="location">按地点统计</button>
+            <button type="button" class="stats-type-btn" data-type="year">按年份统计</button>
+          </div>
           <ul id="stats-category-list"></ul>
         </div>
       </section>
@@ -94,6 +93,6 @@
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
-  <script src="app.js?v=1.1"></script>
+  <script src="app.js?v=1.2"></script>
 </body>
 </html>

@@ -55,9 +55,18 @@
     return '0';
   }
 
+  function recordsThisYear(records) {
+    var y = new Date().getFullYear();
+    return records.filter(function (r) {
+      var ry = (r.date || '').slice(0, 4);
+      return ry === String(y);
+    });
+  }
+
   function renderList() {
     const list = getRecords();
-    const total = list.reduce(function (sum, r) { return sum + (r.amount || 0); }, 0);
+    const thisYearList = recordsThisYear(list);
+    const total = thisYearList.reduce(function (sum, r) { return sum + (r.amount || 0); }, 0);
     const totalEl = document.getElementById('total-amount');
     const listEl = document.getElementById('record-list');
     const emptyEl = document.getElementById('empty-tip');
@@ -221,50 +230,54 @@
     return div.innerHTML;
   }
 
-  function getPeriodRange(period) {
-    var now = new Date();
-    var start = new Date(now.getFullYear(), 0, 1);
-    if (period === 'month') {
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-    } else if (period === 'year') {
-      start = new Date(now.getFullYear(), 0, 1);
-    }
-    return { start: start, end: new Date(now.getTime() + 86400000) };
-  }
-
-  function filterByPeriod(records, period) {
-    if (period === 'all') return records;
-    var range = getPeriodRange(period);
-    return records.filter(function (r) {
-      var d = new Date(r.date);
-      return d >= range.start && d < range.end;
-    });
-  }
-
   function renderStats() {
     const records = getRecords();
-    const period = document.querySelector('.period-btn.active')?.getAttribute('data-period') || 'all';
-    const filtered = filterByPeriod(records, period);
+    const statsType = document.querySelector('.stats-type-btn.active')?.getAttribute('data-type') || 'category';
 
-    const total = filtered.reduce(function (sum, r) { return sum + (r.amount || 0); }, 0);
+    const total = records.reduce(function (sum, r) { return sum + (r.amount || 0); }, 0);
     const totalEl = document.getElementById('stats-total-amount');
     totalEl.textContent = formatAmount(total);
     totalEl.className = 'stats-total-amount ' + (total >= 0 ? 'positive' : 'negative');
 
-    const byCat = {};
-    CATEGORIES.forEach(function (c) { byCat[c] = 0; });
-    filtered.forEach(function (r) {
-      if (byCat[r.category] !== undefined) byCat[r.category] += (r.amount || 0);
-    });
+    var items = [];
+    if (statsType === 'category') {
+      const byCat = {};
+      CATEGORIES.forEach(function (c) { byCat[c] = 0; });
+      records.forEach(function (r) {
+        if (byCat[r.category] !== undefined) byCat[r.category] += (r.amount || 0);
+      });
+      CATEGORIES.forEach(function (cat) {
+        items.push({ name: cat, sum: byCat[cat] });
+      });
+    } else if (statsType === 'location') {
+      const byLoc = {};
+      records.forEach(function (r) {
+        var loc = (r.location || '').trim() || '—';
+        if (byLoc[loc] === undefined) byLoc[loc] = 0;
+        byLoc[loc] += (r.amount || 0);
+      });
+      Object.keys(byLoc).sort().forEach(function (loc) {
+        items.push({ name: loc, sum: byLoc[loc] });
+      });
+    } else if (statsType === 'year') {
+      const byYear = {};
+      records.forEach(function (r) {
+        var y = (r.date || '').slice(0, 4) || '—';
+        if (byYear[y] === undefined) byYear[y] = 0;
+        byYear[y] += (r.amount || 0);
+      });
+      Object.keys(byYear).sort(function (a, b) { return b.localeCompare(a); }).forEach(function (y) {
+        items.push({ name: y + '年', sum: byYear[y] });
+      });
+    }
 
     const listEl = document.getElementById('stats-category-list');
     listEl.innerHTML = '';
-    CATEGORIES.forEach(function (cat) {
-      const sum = byCat[cat];
+    items.forEach(function (item) {
       const li = document.createElement('li');
       li.className = 'stats-category-item';
-      const sumClass = sum >= 0 ? 'positive' : 'negative';
-      li.innerHTML = '<span class="name">' + escapeHtml(cat) + '</span><span class="sum ' + sumClass + '">' + formatAmount(sum) + '</span>';
+      const sumClass = item.sum >= 0 ? 'positive' : 'negative';
+      li.innerHTML = '<span class="name">' + escapeHtml(item.name) + '</span><span class="sum ' + sumClass + '">' + formatAmount(item.sum) + '</span>';
       listEl.appendChild(li);
     });
   }
@@ -303,9 +316,9 @@
     });
   });
 
-  document.querySelectorAll('.period-btn').forEach(function (btn) {
+  document.querySelectorAll('.stats-type-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.querySelectorAll('.period-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.stats-type-btn').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       renderStats();
     });
