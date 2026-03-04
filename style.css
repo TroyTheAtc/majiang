@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.0") center / cover no-repeat fixed;
+  background: var(--red-bg) url("c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.1") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -81,7 +81,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.0") center / cover no-repeat;
+    background: var(--red-bg) url("c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.1") center / cover no-repeat;
   }
 
   .app::before {
@@ -245,6 +245,7 @@ body {
 }
 
 .record-item {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   min-height: var(--tap-min);
   padding: 14px 16px;
   margin-bottom: 10px;
@@ -257,6 +258,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  cursor: pointer;
 }
 
 .record-item .left {
@@ -275,13 +277,21 @@ body {
   color: var(--text);
 }
 
-.record-item .meta .category {
-  color: var(--red-main);
-  font-weight: 600;
-  margin-right: 6px;
+.record-item .meta .meta-winloss {
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.record-item .meta .meta-winloss.win {
+  color: var(--win);
+}
+
+.record-item .meta .meta-winloss.loss {
+  color: var(--loss);
 }
 
 .record-item .amount {
+  font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", cursive;
   font-size: 1.15rem;
   font-weight: 700;
   white-space: nowrap;
@@ -290,11 +300,24 @@ body {
 .record-item .amount.win { color: var(--win); }
 .record-item .amount.loss { color: var(--loss); }
 
-.record-item .btn-delete {
+.record-item .record-actions {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.record-item.show-delete .record-actions {
+  display: flex;
+}
+
+.record-item .btn-icon {
   min-width: 36px;
   min-height: 36px;
-  padding: 0;
-  font-size: 1.1rem;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
   background: transparent;
   border: none;
@@ -302,7 +325,14 @@ body {
   cursor: pointer;
 }
 
-.record-item .btn-delete:active {
+.record-item .btn-icon img {
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
+}
+
+.record-item .btn-icon:active {
   background: rgba(0,0,0,0.08);
 }
 

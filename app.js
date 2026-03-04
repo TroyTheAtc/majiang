@@ -34,6 +34,20 @@
     saveRecords(list);
   }
 
+  function updateRecord(id, record) {
+    const list = getRecords();
+    const idx = list.findIndex(function (r) { return r.id === id; });
+    if (idx === -1) return;
+    list[idx] = {
+      id: id,
+      date: record.date,
+      category: record.category,
+      location: (record.location || '').trim(),
+      amount: record.amount
+    };
+    saveRecords(list);
+  }
+
   function formatAmount(n) {
     const num = Number(n);
     if (num > 0) return '+' + num;
@@ -61,27 +75,143 @@
     list.forEach(function (r) {
       const li = document.createElement('li');
       li.className = 'record-item';
-      const meta = [r.category, r.location].filter(Boolean).join(' · ') || '—';
+      li.setAttribute('data-id', r.id);
       const amountClass = (r.amount || 0) >= 0 ? 'win' : 'loss';
+      const winLossWord = (r.amount || 0) >= 0 ? '赢' : '输';
+      const location = (r.location || '').trim() || '—';
+      const meta = '<span class="meta-winloss ' + amountClass + '">' + winLossWord + '</span> ' + escapeHtml(location) + '·' + escapeHtml(r.category || '—');
       li.innerHTML =
         '<div class="left">' +
           '<div class="date">' + escapeHtml(r.date) + '</div>' +
-          '<div class="meta"><span class="category">' + escapeHtml(r.category) + '</span>' + escapeHtml(meta) + '</div>' +
+          '<div class="meta">' + meta + '</div>' +
         '</div>' +
         '<span class="amount ' + amountClass + '">' + formatAmount(r.amount) + '</span>' +
-        '<button type="button" class="btn-delete" data-id="' + escapeHtml(r.id) + '" aria-label="删除">删除</button>';
+        '<div class="record-actions">' +
+          '<button type="button" class="btn-icon btn-delete" data-id="' + escapeHtml(r.id) + '" aria-label="删除"><img src="shanchu.png" alt="" /></button>' +
+        '</div>';
       listEl.appendChild(li);
     });
 
+    var LONG_PRESS_MS = 500;
+
+    function clearShowDelete() {
+      listEl.querySelectorAll('.record-item.show-delete').forEach(function (el) {
+        el.classList.remove('show-delete');
+        el._longPressShown = false;
+      });
+    }
+
+    function doEdit(item) {
+      clearShowDelete();
+      var id = item.getAttribute('data-id');
+      var list = getRecords();
+      var r = list.find(function (x) { return x.id === id; });
+      if (!r) return;
+      editingId = id;
+      fillForm(r);
+      switchView('add');
+    }
+
+    listEl.querySelectorAll('.record-item').forEach(function (item) {
+      var timer = null;
+      var startTime = 0;
+      var moved = false;
+
+      function clearTimer() {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      }
+
+      function onDown() {
+        moved = false;
+        startTime = Date.now();
+        clearTimer();
+        timer = setTimeout(function () {
+          timer = null;
+          listEl.querySelectorAll('.record-item').forEach(function (el) {
+            el.classList.remove('show-delete');
+            el._longPressShown = false;
+          });
+          item.classList.add('show-delete');
+          item._longPressShown = true;
+          if (navigator.vibrate) navigator.vibrate(40);
+        }, LONG_PRESS_MS);
+      }
+
+      function onMove() {
+        moved = true;
+        clearTimer();
+      }
+
+      function onUp(e) {
+        var duration = Date.now() - startTime;
+        if (moved) {
+          clearTimer();
+          return;
+        }
+        if (item._longPressShown) {
+          clearTimer();
+          if (e && e.preventDefault) e.preventDefault();
+          item._longPressShown = false;
+          return;
+        }
+        clearTimer();
+        if (duration < LONG_PRESS_MS && e && e.type === 'touchend') {
+          e.preventDefault();
+          doEdit(item);
+        }
+      }
+
+      item.addEventListener('touchstart', onDown, { passive: true });
+      item.addEventListener('touchmove', onMove, { passive: true });
+      item.addEventListener('touchend', onUp, { passive: false });
+      item.addEventListener('touchcancel', function () { clearTimer(); }, { passive: true });
+      item.addEventListener('mousedown', onDown);
+      item.addEventListener('mousemove', onMove);
+      item.addEventListener('mouseup', onUp);
+      item.addEventListener('mouseleave', clearTimer);
+
+      item.addEventListener('click', function (e) {
+        if (e.target.closest('.btn-delete')) return;
+        if (item._longPressShown) {
+          item._longPressShown = false;
+          e.preventDefault();
+          return;
+        }
+        doEdit(item);
+      });
+    });
+
     listEl.querySelectorAll('.btn-delete').forEach(function (btn) {
-      btn.addEventListener('click', function () {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
         if (confirm('确定删除这条记录？')) {
           deleteRecord(btn.getAttribute('data-id'));
           renderList();
           renderStats();
+          if (navigator.vibrate) navigator.vibrate(30);
         }
       });
     });
+  }
+
+  var editingId = null;
+
+  function fillForm(record) {
+    var form = document.getElementById('form-add');
+    form.date.value = record.date || '';
+    form.location.value = record.location || '';
+    var catRadio = form.querySelector('[name="category"][value="' + escapeHtml(record.category || '') + '"]');
+    if (catRadio) catRadio.checked = true;
+    var amt = Number(record.amount) || 0;
+    var winRadio = form.querySelector('[name="winloss"][value="win"]');
+    var lossRadio = form.querySelector('[name="winloss"][value="loss"]');
+    if (winRadio) winRadio.checked = amt >= 0;
+    if (lossRadio) lossRadio.checked = amt < 0;
+    form.amount.value = Math.abs(amt) || '';
   }
 
   function escapeHtml(s) {
@@ -151,7 +281,25 @@
 
   document.querySelectorAll('.tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
-      switchView(tab.getAttribute('data-view'));
+      var viewId = tab.getAttribute('data-view');
+      if (viewId === 'add') {
+        editingId = null;
+        var form = document.getElementById('form-add');
+        if (form) {
+          form.reset();
+          var dateInput = form.querySelector('[name="date"]');
+          if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+        }
+      }
+      switchView(viewId);
+    });
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.record-item')) return;
+    document.querySelectorAll('.record-item.show-delete').forEach(function (el) {
+      el.classList.remove('show-delete');
+      el._longPressShown = false;
     });
   });
 
@@ -169,15 +317,22 @@
     var winloss = (form.querySelector('[name="winloss"]:checked') || {}).value;
     var amount = parseInt(form.amount.value, 10) || 0;
     if (winloss === 'loss') amount = -amount;
-    addRecord({
+    var data = {
       date: form.date.value,
       category: (form.querySelector('[name="category"]:checked') || {}).value || CATEGORIES[0],
       location: form.location.value,
       amount: amount
-    });
+    };
+    if (editingId) {
+      updateRecord(editingId, data);
+      editingId = null;
+    } else {
+      addRecord(data);
+    }
     form.reset();
     form.date.value = new Date().toISOString().slice(0, 10);
     renderList();
+    renderStats();
     switchView('list');
   });
 
