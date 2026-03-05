@@ -2,7 +2,16 @@
   'use strict';
 
   const STORAGE_KEY = 'mahjong_records';
+  const HIDE_AMOUNTS_KEY = 'mahjong_hide_amounts';
   const CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
+
+  function getHideAmounts() {
+    return localStorage.getItem(HIDE_AMOUNTS_KEY) === '1';
+  }
+
+  function setHideAmounts(hide) {
+    localStorage.setItem(HIDE_AMOUNTS_KEY, hide ? '1' : '0');
+  }
 
   function getRecords() {
     try {
@@ -49,6 +58,7 @@
   }
 
   function formatAmount(n) {
+    if (getHideAmounts()) return '***';
     const num = Number(n);
     if (num > 0) return '+' + num;
     if (num < 0) return String(num);
@@ -100,7 +110,7 @@
       li.className = 'record-item';
       li.setAttribute('data-id', r.id);
       const amountClass = (r.amount || 0) >= 0 ? 'win' : 'loss';
-      const winLossWord = (r.amount || 0) >= 0 ? '赢' : '输';
+      const winLossWord = (r.amount || 0) >= 0 ? 'WIN' : 'LOSE';
       const location = (r.location || '').trim() || '—';
       const meta = '<span class="meta-winloss ' + amountClass + '">' + winLossWord + '</span> ' + escapeHtml(location) + '·' + escapeHtml(r.category || '—');
       li.innerHTML =
@@ -159,6 +169,8 @@
           });
           item.classList.add('show-delete');
           item._longPressShown = true;
+          item.classList.add('shake');
+          setTimeout(function () { item.classList.remove('shake'); }, 350);
           if (navigator.vibrate) navigator.vibrate(40);
         }, LONG_PRESS_MS);
       }
@@ -253,6 +265,13 @@
     totalEl.textContent = formatAmount(total);
     totalEl.className = 'stats-total-amount ' + (total >= 0 ? 'positive' : 'negative');
 
+    var winCount = records.filter(function (r) { return (r.amount || 0) > 0; }).length;
+    var winRateEl = document.getElementById('stats-win-rate');
+    if (winRateEl) {
+      winRateEl.textContent = records.length ? ((winCount / records.length) * 100).toFixed(1) + '%' : '—';
+      winRateEl.className = 'stats-win-rate ' + (total >= 0 ? 'positive' : 'negative');
+    }
+
     var items = [];
     if (statsType === 'category') {
       const byCat = {};
@@ -338,6 +357,22 @@
     });
   });
 
+  function updateEyeButton() {
+    var btn = document.getElementById('btn-eye');
+    if (!btn) return;
+    var hide = getHideAmounts();
+    var img = btn.querySelector('img');
+    if (img) img.src = hide ? 'eye-close.png' : 'yanjing.png';
+    btn.setAttribute('aria-label', hide ? '显示金额' : '隐藏金额');
+  }
+
+  document.getElementById('btn-eye').addEventListener('click', function () {
+    setHideAmounts(!getHideAmounts());
+    updateEyeButton();
+    renderList();
+    renderStats();
+  });
+
   document.getElementById('form-add').addEventListener('submit', function (e) {
     e.preventDefault();
     var form = e.target;
@@ -367,5 +402,6 @@
   var dateInput = document.querySelector('[name="date"]');
   if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
 
+  updateEyeButton();
   renderList();
 })();
