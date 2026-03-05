@@ -8,14 +8,14 @@
 
 部署到 GitHub Pages 时，以下文件会被访问，请确保都在项目里：
 
-| 文件 | 说明 |
-|------|------|
-| `index.html` | 页面结构 |
-| `style.css` | 样式 |
-| `app.js` | 逻辑与数据 |
-| `c6f419bb9e8f31278b934d0f75ef9ba2.png` | 背景图 |
+| 文件/目录 | 说明 |
+|----------|------|
+| `index.html` | 页面入口 |
+| `src/css/style.css` | 样式 |
+| `src/js/app.js` | 逻辑与数据 |
+| `assets/images/` | 图片资源：背景图 `c6f419bb9e8f31278b934d0f75ef9ba2.png`，以及 `bianji.png`、`shanchu.png`、`yanjing.png`、`eye-close.png`、`backimage.png` 等 |
 
-其它文件（如 `start.sh`、`README.md` 等）可一并提交，不影响网页运行。
+其它文件（如 `docs/`、`README.md` 等）可一并提交，不影响网页运行。
 
 ---
 
@@ -93,7 +93,7 @@ cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git com
 ## 七、常见问题
 
 - **页面打开是 404**：确认 Settings → Pages 里 Source 已选 "Deploy from a branch"，分支为 main，目录为 / (root)。
-- **样式/图片不显示**：确认 `style.css`、`app.js` 和 `c6f419bb9e8f31278b934d0f75ef9ba2.png` 都已提交并推送。
+- **样式/图片不显示**：确认 `index.html`、`src/css/style.css`、`src/js/app.js` 以及 `assets/images/` 下所需图片都已提交并推送。
 - **国内访问慢或打不开**：GitHub 服务器在海外，国内网络可能较慢或偶发无法访问，可多试几次或换网络；若长期需国内访问可考虑腾讯云等方案。
 - **数据会丢吗**：不会。数据存在浏览器 localStorage 里，和访问的网址绑定；只要用同一个链接、同一台设备，数据会保留。
 

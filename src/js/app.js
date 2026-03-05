@@ -123,7 +123,7 @@
         '</div>' +
         '<span class="amount ' + amountClass + '">' + formatAmount(r.amount) + '</span>' +
         '<div class="record-actions">' +
-          '<button type="button" class="btn-icon btn-delete" data-id="' + escapeHtml(r.id) + '" aria-label="删除"><img src="shanchu.png" alt="" /></button>' +
+          '<button type="button" class="btn-icon btn-delete" data-id="' + escapeHtml(r.id) + '" aria-label="删除"><img src="assets/images/shanchu.png" alt="" /></button>' +
         '</div>';
       listEl.appendChild(li);
     });
@@ -364,7 +364,7 @@
     var hide = getHideAmounts();
     document.querySelectorAll('.btn-eye').forEach(function (btn) {
       var img = btn.querySelector('img');
-      if (img) img.src = hide ? 'eye-close.png' : 'yanjing.png';
+      if (img) img.src = hide ? 'assets/images/eye-close.png' : 'assets/images/yanjing.png';
       btn.setAttribute('aria-label', hide ? '显示金额' : '隐藏金额');
     });
   }
