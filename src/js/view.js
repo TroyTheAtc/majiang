@@ -15,6 +15,9 @@
     if (viewId === 'stats' && window.MahjongApp && window.MahjongApp.stats) {
       window.MahjongApp.stats.renderStats();
     }
+    if (viewId === 'divine' && window.MahjongApp && window.MahjongApp.divine) {
+      window.MahjongApp.divine.renderDivine();
+    }
   }
 
   window.MahjongApp = window.MahjongApp || {};

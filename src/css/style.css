@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.4.1") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.4.1") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5") center / cover no-repeat;
   }
 
   .app::before {
@@ -442,6 +442,91 @@ body {
 .view-add .form-add {
   position: relative;
   z-index: 1;
+}
+
+/* ========== 占卜视图 ========== */
+.view-divine {
+  position: relative;
+}
+
+.view-divine::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 248, 228, 0.6);
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.divine-content {
+  position: relative;
+  z-index: 1;
+  padding: 24px 20px 28px;
+  text-align: center;
+}
+
+.divine-date {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  letter-spacing: 0.1em;
+}
+
+.divine-almanac {
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-tile);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  text-align: left;
+}
+
+.divine-yi, .divine-ji {
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.divine-ji { margin-bottom: 0; color: var(--text-muted); }
+.divine-yi { color: var(--red-main); }
+
+.divine-level-label {
+  font-size: 1.17rem;
+  color: var(--text-muted);
+  letter-spacing: 0.25em;
+  margin: 0 0 8px 0;
+}
+
+.divine-level {
+  font-family: "FZZJ-XHLTJW", "方正字迹-心海龙体 简", "Noto Serif SC", "ZCOOL KuaiLe", "STKaiti", "楷体", "KaiTi", "SimKai", serif;
+  font-size: 2.75rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  margin: 0 0 16px 0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 宜守、平：麻将绿（与牌面「发」同色） */
+.divine-level-0,
+.divine-level-1 {
+  color: var(--loss);
+  text-shadow: 0 2px 4px rgba(46,125,50,0.25);
+}
+
+.divine-level-2,
+.divine-level-3 {
+  color: var(--red-main);
+  text-shadow: 0 2px 4px rgba(139,0,0,0.25);
+}
+
+.divine-hint {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+  padding: 0 8px;
 }
 
 /* ========== 新增表单 ========== */

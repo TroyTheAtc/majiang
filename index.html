@@ -7,11 +7,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>老婆的麻将日记</title>
-  <link rel="preload" href="assets/images/background.jpg?v=1.4.1" as="image" />
+  <link rel="preload" href="assets/images/background.jpg?v=1.5" as="image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="src/css/style.css?v=1.4.1" />
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="src/css/style.css?v=1.5" />
 </head>
 <body>
   <div class="app">
@@ -25,6 +25,7 @@
       <nav class="tabs">
         <button type="button" class="tab active" data-view="list">牌谱</button>
         <button type="button" class="tab" data-view="add">搓一把</button>
+        <button type="button" class="tab" data-view="divine">占卜</button>
         <button type="button" class="tab" data-view="stats">算账</button>
       </nav>
     </header>
@@ -77,6 +78,11 @@
         </form>
       </section>
 
+      <!-- 占卜视图 -->
+      <section id="view-divine" class="view view-divine">
+        <div id="divine-content" class="divine-content"></div>
+      </section>
+
       <!-- 统计视图 -->
       <section id="view-stats" class="view view-stats">
         <div class="stats-total card-tile">
@@ -105,11 +111,12 @@
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
-  <script src="src/js/data.js?v=1.4.1"></script>
-  <script src="src/js/stats.js?v=1.4.1"></script>
-  <script src="src/js/view.js?v=1.4.1"></script>
-  <script src="src/js/add.js?v=1.4.1"></script>
-  <script src="src/js/list.js?v=1.4.1"></script>
-  <script src="src/js/app.js?v=1.4.1"></script>
+  <script src="src/js/data.js?v=1.5"></script>
+  <script src="src/js/stats.js?v=1.5"></script>
+  <script src="src/js/view.js?v=1.5"></script>
+  <script src="src/js/add.js?v=1.5"></script>
+  <script src="src/js/list.js?v=1.5"></script>
+  <script src="src/js/divine.js?v=1.5"></script>
+  <script src="src/js/app.js?v=1.5"></script>
 </body>
 </html>
