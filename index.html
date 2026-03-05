@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>老婆的麻将日记</title>
-  <link rel="preload" href="assets/images/c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4.1" as="image" />
+  <link rel="preload" href="assets/images/background.jpg?v=1.4.1" as="image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
@@ -48,8 +48,8 @@
       <section id="view-add" class="view view-add">
         <form id="form-add" class="form-add">
           <div class="field">
-            <label>日期</label>
-            <input type="date" name="date" required />
+            <label for="field-date">日期</label>
+            <input type="date" id="field-date" name="date" required />
           </div>
           <div class="field">
             <label>对象</label>
@@ -62,16 +62,16 @@
             </div>
           </div>
           <div class="field">
-            <label>地点</label>
-            <input type="text" name="location" placeholder="如：家里、茶楼" maxlength="20" />
+            <label for="field-location">地点</label>
+            <input type="text" id="field-location" name="location" placeholder="如：家里、茶楼" maxlength="20" />
           </div>
           <div class="field">
-            <label>战绩</label>
+            <label for="field-amount">战绩</label>
             <div class="amount-row">
               <label class="chip chip-win"><input type="radio" name="winloss" value="win" required /><span>赢</span></label>
               <label class="chip chip-loss"><input type="radio" name="winloss" value="loss" /><span>输</span></label>
             </div>
-            <input type="number" name="amount" placeholder="输入金额（元）" min="0" step="1" required />
+            <input type="number" id="field-amount" name="amount" placeholder="输入金额（元）" min="0" step="1" required />
           </div>
           <button type="submit" class="btn btn-primary">保存</button>
         </form>
@@ -105,6 +105,11 @@
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
+  <script src="src/js/data.js?v=1.4.1"></script>
+  <script src="src/js/stats.js?v=1.4.1"></script>
+  <script src="src/js/view.js?v=1.4.1"></script>
+  <script src="src/js/add.js?v=1.4.1"></script>
+  <script src="src/js/list.js?v=1.4.1"></script>
   <script src="src/js/app.js?v=1.4.1"></script>
 </body>
 </html>

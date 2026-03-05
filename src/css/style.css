@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4.1") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.4.1") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4.1") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.4.1") center / cover no-repeat;
   }
 
   .app::before {
@@ -243,7 +243,8 @@ body {
   margin-bottom: 4px;
 }
 
-.list-summary .btn-eye {
+/* 眼睛按钮：列表与统计共用基础样式 */
+.btn-eye {
   flex-shrink: 0;
   width: 36px;
   height: 36px;
@@ -257,11 +258,11 @@ body {
   cursor: pointer;
 }
 
-.list-summary .btn-eye:active {
+.btn-eye:active {
   opacity: 0.8;
 }
 
-.list-summary .btn-eye img {
+.btn-eye img {
   width: 18px;
   height: 18px;
   display: block;
@@ -627,29 +628,7 @@ body {
 }
 
 .stats-total .btn-eye {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  padding: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
   align-self: center;
-}
-
-.stats-total .btn-eye:active {
-  opacity: 0.8;
-}
-
-.stats-total .btn-eye img {
-  width: 18px;
-  height: 18px;
-  display: block;
-  object-fit: contain;
 }
 
 .stats-total-spacer {

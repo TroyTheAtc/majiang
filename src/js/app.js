@@ -1,345 +1,32 @@
+/**
+ * 入口：Tab、眼睛按钮、表单提交、初始化
+ * 鸿蒙对应：EntryAbility、路由与全局 UI 状态
+ */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'mahjong_records';
-  const HIDE_AMOUNTS_KEY = 'mahjong_hide_amounts';
-  const CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
+  var data = window.MahjongApp && window.MahjongApp.data;
+  var view = window.MahjongApp && window.MahjongApp.view;
+  var add = window.MahjongApp && window.MahjongApp.add;
+  var list = window.MahjongApp && window.MahjongApp.list;
+  var stats = window.MahjongApp && window.MahjongApp.stats;
+  if (!data || !view || !add || !list) return;
 
-  function getHideAmounts() {
-    return localStorage.getItem(HIDE_AMOUNTS_KEY) === '1';
-  }
-
-  function setHideAmounts(hide) {
-    localStorage.setItem(HIDE_AMOUNTS_KEY, hide ? '1' : '0');
-  }
-
-  function getRecords() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    } catch {
-      return [];
-    }
-  }
-
-  function saveRecords(records) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  }
-
-  function addRecord(record) {
-    const list = getRecords();
-    list.unshift({
-      id: String(Date.now()),
-      date: record.date,
-      category: record.category,
-      location: (record.location || '').trim(),
-      amount: record.amount
-    });
-    saveRecords(list);
-  }
-
-  function deleteRecord(id) {
-    let list = getRecords();
-    list = list.filter(function (r) { return r.id !== id; });
-    saveRecords(list);
-  }
-
-  function updateRecord(id, record) {
-    const list = getRecords();
-    const idx = list.findIndex(function (r) { return r.id === id; });
-    if (idx === -1) return;
-    list[idx] = {
-      id: id,
-      date: record.date,
-      category: record.category,
-      location: (record.location || '').trim(),
-      amount: record.amount
-    };
-    saveRecords(list);
-  }
-
-  function formatAmount(n) {
-    if (getHideAmounts()) return '***';
-    const num = Number(n);
-    if (num > 0) return '+' + num;
-    if (num < 0) return String(num);
-    return '0';
-  }
-
-  function recordsThisYear(records) {
-    var y = new Date().getFullYear();
-    return records.filter(function (r) {
-      var ry = (r.date || '').slice(0, 4);
-      return ry === String(y);
-    });
-  }
-
-  function renderList() {
-    const list = getRecords();
-    var sorted = list.slice().sort(function (a, b) {
-      return (b.date || '').localeCompare(a.date || '');
-    });
-    const thisYearList = recordsThisYear(list);
-    const total = thisYearList.reduce(function (sum, r) { return sum + (r.amount || 0); }, 0);
-    const totalEl = document.getElementById('total-amount');
-    const listEl = document.getElementById('record-list');
-    const emptyEl = document.getElementById('empty-tip');
-
-    totalEl.textContent = formatAmount(total);
-    totalEl.className = 'summary-amount ' + (total >= 0 ? 'positive' : 'negative');
-
-    listEl.innerHTML = '';
-    if (sorted.length === 0) {
-      emptyEl.classList.add('visible');
-      return;
-    }
-    emptyEl.classList.remove('visible');
-
-    var prevYear = null;
-    sorted.forEach(function (r) {
-      var year = (r.date || '').slice(0, 4);
-      if (prevYear !== null && year !== prevYear) {
-        var divLi = document.createElement('li');
-        divLi.className = 'year-divider';
-        divLi.setAttribute('aria-hidden', 'true');
-        divLi.innerHTML = '<span class="year-divider-line"></span><span class="year-divider-text">' + escapeHtml(year ? year + '年' : '') + '</span><span class="year-divider-line"></span>';
-        listEl.appendChild(divLi);
-      }
-      prevYear = year;
-
-      const li = document.createElement('li');
-      li.className = 'record-item';
-      li.setAttribute('data-id', r.id);
-      const amountClass = (r.amount || 0) >= 0 ? 'win' : 'loss';
-      const winLossWord = (r.amount || 0) >= 0 ? 'WIN' : 'LOSE';
-      const location = (r.location || '').trim() || '—';
-      const hideMeta = getHideAmounts();
-      const locationStr = hideMeta ? '**' : escapeHtml(location);
-      const categoryStr = hideMeta ? '**' : escapeHtml(r.category || '—');
-      const meta = '<span class="meta-winloss ' + amountClass + '">' + winLossWord + '</span> ' + locationStr + '·' + categoryStr;
-      li.innerHTML =
-        '<div class="left">' +
-          '<div class="date">' + escapeHtml(r.date) + '</div>' +
-          '<div class="meta">' + meta + '</div>' +
-        '</div>' +
-        '<span class="amount ' + amountClass + '">' + formatAmount(r.amount) + '</span>' +
-        '<div class="record-actions">' +
-          '<button type="button" class="btn-icon btn-delete" data-id="' + escapeHtml(r.id) + '" aria-label="删除"><img src="assets/images/shanchu.png" alt="" /></button>' +
-        '</div>';
-      listEl.appendChild(li);
-    });
-
-    var LONG_PRESS_MS = 500;
-
-    function clearShowDelete() {
-      listEl.querySelectorAll('.record-item.show-delete').forEach(function (el) {
-        el.classList.remove('show-delete');
-        el._longPressShown = false;
-      });
-    }
-
-    function doEdit(item) {
-      clearShowDelete();
-      var id = item.getAttribute('data-id');
-      var list = getRecords();
-      var r = list.find(function (x) { return x.id === id; });
-      if (!r) return;
-      editingId = id;
-      fillForm(r);
-      switchView('add');
-    }
-
-    listEl.querySelectorAll('.record-item').forEach(function (item) {
-      var timer = null;
-      var startTime = 0;
-      var moved = false;
-
-      function clearTimer() {
-        if (timer) {
-          clearTimeout(timer);
-          timer = null;
-        }
-      }
-
-      function onDown() {
-        moved = false;
-        startTime = Date.now();
-        clearTimer();
-        timer = setTimeout(function () {
-          timer = null;
-          listEl.querySelectorAll('.record-item').forEach(function (el) {
-            el.classList.remove('show-delete');
-            el._longPressShown = false;
-          });
-          item.classList.add('show-delete');
-          item._longPressShown = true;
-          item.classList.add('shake');
-          setTimeout(function () { item.classList.remove('shake'); }, 350);
-          if (navigator.vibrate) navigator.vibrate(40);
-        }, LONG_PRESS_MS);
-      }
-
-      function onMove() {
-        moved = true;
-        clearTimer();
-      }
-
-      function onUp(e) {
-        var duration = Date.now() - startTime;
-        if (moved) {
-          clearTimer();
-          return;
-        }
-        if (item._longPressShown) {
-          clearTimer();
-          if (e && e.preventDefault) e.preventDefault();
-          item._longPressShown = false;
-          return;
-        }
-        clearTimer();
-        if (duration < LONG_PRESS_MS && e && e.type === 'touchend') {
-          e.preventDefault();
-          doEdit(item);
-        }
-      }
-
-      item.addEventListener('touchstart', onDown, { passive: true });
-      item.addEventListener('touchmove', onMove, { passive: true });
-      item.addEventListener('touchend', onUp, { passive: false });
-      item.addEventListener('touchcancel', function () { clearTimer(); }, { passive: true });
-      item.addEventListener('mousedown', onDown);
-      item.addEventListener('mousemove', onMove);
-      item.addEventListener('mouseup', onUp);
-      item.addEventListener('mouseleave', clearTimer);
-
-      item.addEventListener('click', function (e) {
-        if (e.target.closest('.btn-delete')) return;
-        if (item._longPressShown) {
-          item._longPressShown = false;
-          e.preventDefault();
-          return;
-        }
-        doEdit(item);
-      });
-    });
-
-    listEl.querySelectorAll('.btn-delete').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        if (confirm('确定删除这条记录？')) {
-          deleteRecord(btn.getAttribute('data-id'));
-          renderList();
-          renderStats();
-          if (navigator.vibrate) navigator.vibrate(30);
-        }
-      });
-    });
-  }
-
-  var editingId = null;
-
-  function fillForm(record) {
-    var form = document.getElementById('form-add');
-    form.date.value = record.date || '';
-    form.location.value = record.location || '';
-    var catRadio = form.querySelector('[name="category"][value="' + escapeHtml(record.category || '') + '"]');
-    if (catRadio) catRadio.checked = true;
-    var amt = Number(record.amount) || 0;
-    var winRadio = form.querySelector('[name="winloss"][value="win"]');
-    var lossRadio = form.querySelector('[name="winloss"][value="loss"]');
-    if (winRadio) winRadio.checked = amt >= 0;
-    if (lossRadio) lossRadio.checked = amt < 0;
-    form.amount.value = Math.abs(amt) || '';
-  }
-
-  function escapeHtml(s) {
-    if (s == null) return '';
-    const div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
-  }
-
-  function renderStats() {
-    const records = getRecords();
-    const statsType = document.querySelector('.stats-type-btn.active')?.getAttribute('data-type') || 'category';
-
-    const total = records.reduce(function (sum, r) { return sum + (r.amount || 0); }, 0);
-    const totalEl = document.getElementById('stats-total-amount');
-    totalEl.textContent = formatAmount(total);
-    totalEl.className = 'stats-total-amount ' + (total >= 0 ? 'positive' : 'negative');
-
-    var winCount = records.filter(function (r) { return (r.amount || 0) > 0; }).length;
-    var winRateEl = document.getElementById('stats-win-rate');
-    if (winRateEl) {
-      winRateEl.textContent = records.length ? (getHideAmounts() ? '***' : ((winCount / records.length) * 100).toFixed(1) + '%') : '—';
-      winRateEl.className = 'stats-win-rate ' + (total >= 0 ? 'positive' : 'negative');
-    }
-
-    var items = [];
-    if (statsType === 'category') {
-      const byCat = {};
-      CATEGORIES.forEach(function (c) { byCat[c] = 0; });
-      records.forEach(function (r) {
-        if (byCat[r.category] !== undefined) byCat[r.category] += (r.amount || 0);
-      });
-      CATEGORIES.forEach(function (cat) {
-        items.push({ name: cat, sum: byCat[cat] });
-      });
-    } else if (statsType === 'location') {
-      const byLoc = {};
-      records.forEach(function (r) {
-        var loc = (r.location || '').trim() || '—';
-        if (byLoc[loc] === undefined) byLoc[loc] = 0;
-        byLoc[loc] += (r.amount || 0);
-      });
-      Object.keys(byLoc).sort().forEach(function (loc) {
-        items.push({ name: loc, sum: byLoc[loc] });
-      });
-    } else if (statsType === 'year') {
-      const byYear = {};
-      records.forEach(function (r) {
-        var y = (r.date || '').slice(0, 4) || '—';
-        if (byYear[y] === undefined) byYear[y] = 0;
-        byYear[y] += (r.amount || 0);
-      });
-      Object.keys(byYear).sort(function (a, b) { return b.localeCompare(a); }).forEach(function (y) {
-        items.push({ name: y + '年', sum: byYear[y] });
-      });
-    }
-
-    const listEl = document.getElementById('stats-category-list');
-    listEl.innerHTML = '';
-    items.forEach(function (item) {
-      const li = document.createElement('li');
-      li.className = 'stats-category-item';
-      const sumClass = item.sum >= 0 ? 'positive' : 'negative';
-      li.innerHTML = '<span class="name">' + escapeHtml(item.name) + '</span><span class="sum ' + sumClass + '">' + formatAmount(item.sum) + '</span>';
-      listEl.appendChild(li);
-    });
-  }
-
-  function switchView(viewId) {
-    document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
-    document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
-    var view = document.getElementById('view-' + viewId);
-    var tab = document.querySelector('.tab[data-view="' + viewId + '"]');
-    if (view) view.classList.add('active');
-    if (tab) tab.classList.add('active');
-    if (viewId === 'stats') renderStats();
-  }
+  var switchView = view.switchView;
+  var getRecords = data.getRecords;
+  var getHideAmounts = data.getHideAmounts;
+  var setHideAmounts = data.setHideAmounts;
+  var addRecord = data.addRecord;
+  var updateRecord = data.updateRecord;
+  var CATEGORIES = data.CATEGORIES;
+  var renderList = list.renderList;
+  var renderStats = stats ? stats.renderStats : function () {};
+  var initForm = add.initForm;
 
   document.querySelectorAll('.tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
       var viewId = tab.getAttribute('data-view');
-      if (viewId === 'add') {
-        editingId = null;
-        var form = document.getElementById('form-add');
-        if (form) {
-          form.reset();
-          var dateInput = form.querySelector('[name="date"]');
-          if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
-        }
-      }
+      if (viewId === 'add') initForm();
       switchView(viewId);
     });
   });
@@ -384,17 +71,17 @@
     var winloss = (form.querySelector('[name="winloss"]:checked') || {}).value;
     var amount = parseInt(form.amount.value, 10) || 0;
     if (winloss === 'loss') amount = -amount;
-    var data = {
+    var formData = {
       date: form.date.value,
       category: (form.querySelector('[name="category"]:checked') || {}).value || CATEGORIES[0],
       location: form.location.value,
       amount: amount
     };
-    if (editingId) {
-      updateRecord(editingId, data);
-      editingId = null;
+    if (add.getEditingId()) {
+      updateRecord(add.getEditingId(), formData);
+      add.setEditingId(null);
     } else {
-      addRecord(data);
+      addRecord(formData);
     }
     form.reset();
     form.date.value = new Date().toISOString().slice(0, 10);
@@ -403,7 +90,6 @@
     switchView('list');
   });
 
-  // 默认日期为今天
   var dateInput = document.querySelector('[name="date"]');
   if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
 
