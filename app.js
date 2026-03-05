@@ -112,7 +112,10 @@
       const amountClass = (r.amount || 0) >= 0 ? 'win' : 'loss';
       const winLossWord = (r.amount || 0) >= 0 ? 'WIN' : 'LOSE';
       const location = (r.location || '').trim() || '—';
-      const meta = '<span class="meta-winloss ' + amountClass + '">' + winLossWord + '</span> ' + escapeHtml(location) + '·' + escapeHtml(r.category || '—');
+      const hideMeta = getHideAmounts();
+      const locationStr = hideMeta ? '**' : escapeHtml(location);
+      const categoryStr = hideMeta ? '**' : escapeHtml(r.category || '—');
+      const meta = '<span class="meta-winloss ' + amountClass + '">' + winLossWord + '</span> ' + locationStr + '·' + categoryStr;
       li.innerHTML =
         '<div class="left">' +
           '<div class="date">' + escapeHtml(r.date) + '</div>' +
@@ -268,7 +271,7 @@
     var winCount = records.filter(function (r) { return (r.amount || 0) > 0; }).length;
     var winRateEl = document.getElementById('stats-win-rate');
     if (winRateEl) {
-      winRateEl.textContent = records.length ? ((winCount / records.length) * 100).toFixed(1) + '%' : '—';
+      winRateEl.textContent = records.length ? (getHideAmounts() ? '***' : ((winCount / records.length) * 100).toFixed(1) + '%') : '—';
       winRateEl.className = 'stats-win-rate ' + (total >= 0 ? 'positive' : 'negative');
     }
 
@@ -358,19 +361,21 @@
   });
 
   function updateEyeButton() {
-    var btn = document.getElementById('btn-eye');
-    if (!btn) return;
     var hide = getHideAmounts();
-    var img = btn.querySelector('img');
-    if (img) img.src = hide ? 'eye-close.png' : 'yanjing.png';
-    btn.setAttribute('aria-label', hide ? '显示金额' : '隐藏金额');
+    document.querySelectorAll('.btn-eye').forEach(function (btn) {
+      var img = btn.querySelector('img');
+      if (img) img.src = hide ? 'eye-close.png' : 'yanjing.png';
+      btn.setAttribute('aria-label', hide ? '显示金额' : '隐藏金额');
+    });
   }
 
-  document.getElementById('btn-eye').addEventListener('click', function () {
-    setHideAmounts(!getHideAmounts());
-    updateEyeButton();
-    renderList();
-    renderStats();
+  document.querySelectorAll('.btn-eye').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setHideAmounts(!getHideAmounts());
+      updateEyeButton();
+      renderList();
+      renderStats();
+    });
   });
 
   document.getElementById('form-add').addEventListener('submit', function (e) {

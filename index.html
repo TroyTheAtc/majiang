@@ -7,11 +7,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>老婆的麻将日记</title>
-  <link rel="preload" href="c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4" as="image" />
+  <link rel="preload" href="c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4.1" as="image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=1.4" />
+  <link rel="stylesheet" href="style.css?v=1.4.1" />
 </head>
 <body>
   <div class="app">
@@ -38,7 +38,7 @@
             <span class="summary-label">今年战绩</span>
             <span id="total-amount" class="summary-amount">0</span>
           </div>
-          <button type="button" id="btn-eye" class="btn-eye" aria-label="隐藏金额"><img src="yanjing.png" alt="" /></button>
+          <button type="button" id="btn-eye" class="btn-eye btn-eye-list" aria-label="隐藏金额"><img src="yanjing.png" alt="" /></button>
         </div>
         <ul id="record-list" class="record-list"></ul>
         <p id="empty-tip" class="empty-tip">暂无记录，点击「搓一把」添加</p>
@@ -82,9 +82,11 @@
         <div class="stats-total card-tile">
           <span class="stats-total-label">总战绩</span>
           <div class="stats-total-row">
+            <button type="button" class="btn-eye btn-eye-stats" aria-label="隐藏金额"><img src="yanjing.png" alt="" /></button>
             <span class="stats-total-spacer" aria-hidden="true"></span>
             <span id="stats-total-amount" class="stats-total-amount">0</span>
-            <span class="stats-total-spacer stats-total-right">
+            <span class="stats-total-spacer" aria-hidden="true"></span>
+            <span class="stats-total-right">
               <span id="stats-win-rate" class="stats-win-rate">—</span>
             </span>
           </div>
@@ -103,6 +105,6 @@
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
-  <script src="app.js?v=1.4"></script>
+  <script src="app.js?v=1.4.1"></script>
 </body>
 </html>

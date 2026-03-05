@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4") center / cover no-repeat fixed;
+  background: var(--red-bg) url("c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4.1") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4") center / cover no-repeat;
+    background: var(--red-bg) url("c6f419bb9e8f31278b934d0f75ef9ba2.png?v=1.4.1") center / cover no-repeat;
   }
 
   .app::before {
@@ -600,16 +600,16 @@ body {
 }
 
 .stats-total {
-  padding: 24px;
+  padding: 14px 20px 16px;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .stats-total-label {
   display: block;
   font-size: 1.1rem;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   letter-spacing: 0.2em;
 }
 
@@ -626,23 +626,57 @@ body {
   gap: 12px;
 }
 
+.stats-total .btn-eye {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  align-self: center;
+}
+
+.stats-total .btn-eye:active {
+  opacity: 0.8;
+}
+
+.stats-total .btn-eye img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+}
+
 .stats-total-spacer {
   flex: 1;
   min-width: 0;
 }
 
 .stats-total-right {
+  width: 36px;
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
   align-items: baseline;
+  text-align: right;
+  line-height: 1.25;
 }
 
 .stats-total-row .stats-total-amount {
   flex-shrink: 0;
+  line-height: 1.25;
+  min-height: 1.25em;
 }
 
 .stats-win-rate {
   font-size: 1rem;
+  line-height: 1.25;
+  min-height: 1.25em;
 }
 
 .stats-total-amount.positive { color: var(--win); }
