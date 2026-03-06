@@ -33,96 +33,75 @@
     return mStr + dStr;
   }
 
-  /* 黄历：直接请求聚合数据 API，按公历日期缓存；超时或失败则用内置表 */
-  var JUHE_ALMANAC_KEY = '937dc5a44082eb06024ad7955c38df6b';
-  var ALCACHE_PREFIX = 'juhe_hl_';
-  var ALCACHE_TIMEOUT_MS = 8000;
+  /* 黄历宜忌：lunar-javascript + 建除十二值日（月支起建），与 almanacToLevel 一致用 诸事皆宜/诸事不宜 */
+  var JIAN_CHU = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭'];
+  var ZHI_ORDER = ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'];
+  var JIAN_CHU_YI_JI = {
+    '建': { yi: [], ji: ['博戏'] },
+    '除': { yi: ['祭祀', '出行', '纳财'], ji: [] },
+    '满': { yi: [], ji: ['求财', '纳财'] },
+    '平': { yi: [], ji: ['博戏'] },
+    '定': { yi: ['会友', '纳财'], ji: [] },
+    '执': { yi: [], ji: ['博戏'] },
+    '破': { yi: [], ji: ['诸事不宜'] },
+    '危': { yi: ['祭祀'], ji: ['博戏'] },
+    '成': { yi: ['诸事皆宜'], ji: [] },
+    '收': { yi: [], ji: ['博戏', '求财', '纳财'] },
+    '开': { yi: ['开市', '出行', '求财'], ji: [] },
+    '闭': { yi: [], ji: ['诸事不宜'] }
+  };
 
-  function pad2(n) { return n < 10 ? '0' + n : String(n); }
-
-  function getAlmanacFromCache(dateStr) {
+  /** 用 lunar-javascript 取月支、日支，算建除值日，返回 { yi, ji }；无库则回退内置表 */
+  function getAlmanacFromJianChu(solarY, solarM, solarD) {
+    var Lunar = typeof window !== 'undefined' && window.Lunar;
+    var Solar = typeof window !== 'undefined' && window.Solar;
+    if (!Lunar || !Solar) {
+      var lunar = solar2lunar(solarY, solarM, solarD);
+      return getAlmanacFallback(lunar.month, lunar.day);
+    }
     try {
-      var raw = localStorage.getItem(ALCACHE_PREFIX + dateStr);
-      if (!raw) return null;
-      var obj = JSON.parse(raw);
-      return obj && Array.isArray(obj.yi) && Array.isArray(obj.ji) ? obj : null;
-    } catch (e) { return null; }
+      var solar = Solar.fromYmd(solarY, solarM, solarD);
+      var lunar = solar.getLunar();
+      var monthGZ = lunar.getMonthInGanZhi ? lunar.getMonthInGanZhi() : '';
+      var dayGZ = lunar.getDayInGanZhi ? lunar.getDayInGanZhi() : '';
+      var monthZhi = (monthGZ && monthGZ.length >= 2) ? monthGZ.charAt(1) : '';
+      var dayZhi = (dayGZ && dayGZ.length >= 2) ? dayGZ.charAt(1) : '';
+      var monthIndex = ZHI_ORDER.indexOf(monthZhi);
+      var dayIndex = ZHI_ORDER.indexOf(dayZhi);
+      if (monthIndex < 0 || dayIndex < 0) {
+        var l = solar2lunar(solarY, solarM, solarD);
+        return getAlmanacFallback(l.month, l.day);
+      }
+      var jcIndex = (dayIndex - monthIndex + 12) % 12;
+      var todayJC = JIAN_CHU[jcIndex];
+      var row = JIAN_CHU_YI_JI[todayJC];
+      if (!row) {
+        var l2 = solar2lunar(solarY, solarM, solarD);
+        return getAlmanacFallback(l2.month, l2.day);
+      }
+      return { yi: row.yi.slice(), ji: row.ji.slice() };
+    } catch (e) {
+      var l3 = solar2lunar(solarY, solarM, solarD);
+      return getAlmanacFallback(l3.month, l3.day);
+    }
   }
 
-  function setAlmanacCache(dateStr, data) {
-    try {
-      localStorage.setItem(ALCACHE_PREFIX + dateStr, JSON.stringify({ yi: data.yi, ji: data.ji }));
-    } catch (e) { /* quota or disabled */ }
-  }
-
-  function parseYiJi(yiVal, jiVal) {
-    if (Array.isArray(yiVal) && Array.isArray(jiVal)) return { yi: yiVal, ji: jiVal };
-    var yi = (yiVal != null && String(yiVal).trim()) ? String(yiVal).trim().split(/\s+/) : [];
-    var ji = (jiVal != null && String(jiVal).trim()) ? String(jiVal).trim().split(/\s+/) : [];
-    return { yi: yi, ji: ji };
-  }
-
-  /** 直接请求聚合老黄历：GET key&date=YYYY-MM-DD，带超时 */
-  function fetchJuheAlmanac(dateStr) {
-    var url = 'https://v.juhe.cn/laohuangli/d?key=' + encodeURIComponent(JUHE_ALMANAC_KEY) + '&date=' + encodeURIComponent(dateStr);
-    var controller = new AbortController();
-    var timeoutId = setTimeout(function () { controller.abort(); }, ALCACHE_TIMEOUT_MS);
-    return fetch(url, { signal: controller.signal })
-      .then(function (res) {
-        clearTimeout(timeoutId);
-        if (!res.ok) return Promise.reject(new Error(res.statusText));
-        return res.json();
-      })
-      .then(function (json) {
-        if (json.error_code !== 0) return Promise.reject(new Error(json.reason || 'error_code ' + json.error_code));
-        var r = json.result;
-        if (!r) return Promise.reject(new Error('no result'));
-        return parseYiJi(r.yi, r.ji);
-      })
-      .catch(function (e) {
-        clearTimeout(timeoutId);
-        return Promise.reject(e);
-      });
-  }
-
-  /** 按公历日期取黄历宜忌：先读缓存；未命中则请求聚合并写缓存；超时或失败则用内置表 */
-  function getAlmanacAsync(solarY, solarM, solarD) {
-    var dateStr = solarY + '-' + pad2(solarM) + '-' + pad2(solarD);
-    var cached = getAlmanacFromCache(dateStr);
-    if (cached) return Promise.resolve(cached);
-    return fetchJuheAlmanac(dateStr)
-      .then(function (data) {
-        setAlmanacCache(dateStr, data);
-        return data;
-      })
-      .catch(function () {
-        var lunar = solar2lunar(solarY, solarM, solarD);
-        return getAlmanac(lunar.month, lunar.day);
-      });
-  }
-
-  /* 黄历宜忌（内置表 + 默认规则）：仅在做 API 失败时的回退使用 */
-  var almanac = {
+  /* 回退：lunar-javascript 不可用时的内置表 + 默认规则 */
+  var almanacFallback = {
     '1-1': { yi: ['诸事皆宜', '祭祀', '祈福', '会友'], ji: ['开市', '嫁娶'] },
     '1-5': { yi: ['祭祀', '会友'], ji: ['诸事不宜', '博戏', '求财'] },
     '1-15': { yi: ['祭祀', '祈福'], ji: ['诸事不宜', '博戏', '动土'] },
     '1-8': { yi: ['诸事皆宜', '求财', '纳财', '会友'], ji: [] },
-    '1-18': { yi: ['诸事皆宜', '求财', '纳财'], ji: [] },
-    '1-28': { yi: ['诸事皆宜', '求财', '纳财', '开市'], ji: [] },
     '2-2': { yi: ['祭祀', '会友'], ji: ['诸事不宜', '博戏'] },
-    '2-8': { yi: ['诸事皆宜', '求财', '纳财'], ji: [] },
-    '2-15': { yi: ['祭祀'], ji: ['诸事不宜', '博戏'] },
     '5-5': { yi: ['祭祀', '祈福'], ji: ['诸事不宜', '博戏', '动土'] },
     '8-15': { yi: ['会友', '祈福'], ji: ['诸事不宜', '博戏'] },
-    '12-8': { yi: ['祭祀', '祈福'], ji: ['诸事不宜', '博戏'] },
-    '12-23': { yi: ['祭祀'], ji: ['诸事不宜', '博戏', '求财'] }
+    '12-8': { yi: ['祭祀', '祈福'], ji: ['诸事不宜', '博戏'] }
   };
 
-  function getAlmanac(lunarMonth, lunarDay) {
+  function getAlmanacFallback(lunarMonth, lunarDay) {
     var key = lunarMonth + '-' + lunarDay;
-    var a = almanac[key];
+    var a = almanacFallback[key];
     if (a) return { yi: a.yi.slice(), ji: a.ji.slice() };
-    /* 默认：初一、十五忌博戏；初八、十八、二十八宜求财；诸事皆宜/诸事不宜随日写入 */
     var yi = ['会友'];
     var ji = [];
     if (lunarDay === 1 || lunarDay === 15) {
@@ -215,6 +194,24 @@
     if (parts.length !== 3) return;
     var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10), d = parseInt(parts[2], 10);
     var lunar = solar2lunar(y, m, d);
+    var alm = getAlmanacFromJianChu(y, m, d);
+    var baseLevel = almanacToLevel(alm.yi, alm.ji);
+    var records = data.getRecords();
+    var same = getSamePeriodStats(dateStr, records);
+    var finalLevel = applySamePeriodAdjust(baseLevel, same);
+    var hints = levelHints[finalLevel];
+    var chosen = hints[Math.floor(Math.random() * hints.length)];
+    var samePrefix = same.total > 0 ? (same.winRate >= 0.5 ? '历史同期无双牌浪，' : '历史同期手气欠佳，') : '';
+    var hintMain = chosen.main;
+    var hintSub = chosen.sub;
+    var idx = hintMain.indexOf('。');
+    var line1 = idx >= 0 ? hintMain.slice(0, idx + 1) : hintMain;
+    var line2 = idx >= 0 ? hintMain.slice(idx + 1).trim() : '';
+    var mainMarkup = line2
+      ? '<span class="divine-quote-line1">' + data.escapeHtml(line1) + '</span><span class="divine-quote-line2">' + data.escapeHtml(line2) + '</span>'
+      : data.escapeHtml(hintMain);
+    var levelImg = levelImages[finalLevel];
+    var levelAlt = levelNames[finalLevel];
     var container = document.getElementById('divine-content');
     if (!container) return;
     container.innerHTML =
@@ -222,45 +219,16 @@
         '<input type="date" id="divine-date-picker" class="divine-date-input" value="' + data.escapeHtml(dateStr) + '" />' +
         '<span class="divine-date-lunar"> · ' + data.escapeHtml((lunar.gzYear ? lunar.gzYear + '年' : '') + formatLunarMD(lunar.month, lunar.day)) + '</span>' +
       '</div>' +
-      '<div class="divine-almanac"><p class="divine-yi">宜 加载中…</p><p class="divine-ji">忌 —</p></div>' +
-      '<p class="divine-level-label">当日麻运</p><div class="divine-level divine-level-1"><img src="assets/images/ping.png?v=1.5.5" alt="平" class="divine-level-img" decoding="async" /></div>' +
-      '<p class="divine-hint divine-hint-main">—</p><div class="divine-hint-divider"></div><p class="divine-hint divine-hint-sub">—</p>';
-    getAlmanacAsync(y, m, d).then(function (alm) {
-      var baseLevel = almanacToLevel(alm.yi, alm.ji);
-      var records = data.getRecords();
-      var same = getSamePeriodStats(dateStr, records);
-      var finalLevel = applySamePeriodAdjust(baseLevel, same);
-      var hints = levelHints[finalLevel];
-      var chosen = hints[Math.floor(Math.random() * hints.length)];
-      var samePrefix = same.total > 0 ? (same.winRate >= 0.5 ? '历史同期无双牌浪，' : '历史同期手气欠佳，') : '';
-      var hintMain = chosen.main;
-      var hintSub = chosen.sub;
-      var idx = hintMain.indexOf('。');
-      var line1 = idx >= 0 ? hintMain.slice(0, idx + 1) : hintMain;
-      var line2 = idx >= 0 ? hintMain.slice(idx + 1).trim() : '';
-      var mainMarkup = line2
-        ? '<span class="divine-quote-line1">' + data.escapeHtml(line1) + '</span><span class="divine-quote-line2">' + data.escapeHtml(line2) + '</span>'
-        : data.escapeHtml(hintMain);
-      var levelImg = levelImages[finalLevel];
-      var levelAlt = levelNames[finalLevel];
-      var c = document.getElementById('divine-content');
-      if (!c) return;
-      c.innerHTML =
-        '<div class="divine-date divine-date-line">' +
-          '<input type="date" id="divine-date-picker" class="divine-date-input" value="' + data.escapeHtml(dateStr) + '" />' +
-          '<span class="divine-date-lunar"> · ' + data.escapeHtml((lunar.gzYear ? lunar.gzYear + '年' : '') + formatLunarMD(lunar.month, lunar.day)) + '</span>' +
-        '</div>' +
-        '<div class="divine-almanac">' +
-          '<p class="divine-yi">宜 ' + (alm.yi.length ? alm.yi.join('、') : '—') + '</p>' +
-          '<p class="divine-ji">忌 ' + (alm.ji.length ? alm.ji.join('、') : '—') + '</p>' +
-        '</div>' +
-        '<p class="divine-level-label">当日麻运</p>' +
-        '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '?v=1.5.5" alt="' + levelAlt + '" class="divine-level-img" decoding="async" /></div>' +
-        '<p class="divine-hint divine-hint-main">' + mainMarkup + '</p>' +
-        '<div class="divine-hint-divider"></div>' +
-        '<p class="divine-hint divine-hint-sub">' + data.escapeHtml(hintSub) + '</p>' +
-        (samePrefix ? '<p class="divine-hint divine-hint-same">' + data.escapeHtml(samePrefix) + '</p>' : '');
-    });
+      '<div class="divine-almanac">' +
+        '<p class="divine-yi">宜 ' + (alm.yi.length ? alm.yi.join('、') : '—') + '</p>' +
+        '<p class="divine-ji">忌 ' + (alm.ji.length ? alm.ji.join('、') : '—') + '</p>' +
+      '</div>' +
+      '<p class="divine-level-label">当日麻运</p>' +
+      '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '?v=1.5.6" alt="' + levelAlt + '" class="divine-level-img" decoding="async" /></div>' +
+      '<p class="divine-hint divine-hint-main">' + mainMarkup + '</p>' +
+      '<div class="divine-hint-divider"></div>' +
+      '<p class="divine-hint divine-hint-sub">' + data.escapeHtml(hintSub) + '</p>' +
+      (samePrefix ? '<p class="divine-hint divine-hint-same">' + data.escapeHtml(samePrefix) + '</p>' : '');
   }
 
   window.MahjongApp = window.MahjongApp || {};
