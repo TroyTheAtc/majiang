@@ -178,7 +178,7 @@
         '<p class="divine-ji">忌 ' + (alm.ji.length ? alm.ji.join('、') : '—') + '</p>' +
       '</div>' +
       '<p class="divine-level-label">今日麻运</p>' +
-      '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '" alt="' + levelAlt + '" class="divine-level-img" /></div>' +
+      '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '?v=1.5.4" alt="' + levelAlt + '" class="divine-level-img" decoding="async" /></div>' +
       '<p class="divine-hint divine-hint-main">' + mainMarkup + '</p>' +
       '<div class="divine-hint-divider"></div>' +
       '<p class="divine-hint divine-hint-sub">' + data.escapeHtml(hintSub) + '</p>' +

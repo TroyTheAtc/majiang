@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.1") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.4") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.1") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.4") center / cover no-repeat;
   }
 
   .app::before {
@@ -503,6 +503,10 @@ body {
 
 .divine-level {
   margin: 0 0 16px 0;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .divine-level-img {
@@ -642,6 +646,7 @@ body {
   min-height: var(--tap-min);
   padding: 8px 16px 12px;
   font-size: 1.05rem;
+  font-weight: 400;
   line-height: 1;
   letter-spacing: 0.12em;
   text-align: center;
@@ -655,6 +660,7 @@ body {
 .chip span {
   display: inline-block;
   transform: translateY(6px);
+  font-weight: 400;
 }
 
 .chip input {
