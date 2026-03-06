@@ -1,6 +1,6 @@
 # 老婆的麻将日记 — GitHub Pages 公网部署指南
 
-当前版本：1.5.4
+当前版本： 1.5.5
 
 按下面步骤操作，即可获得一个免费公网地址（如 `https://TroyTheAtc.github.io/majiang/`），手机随时打开使用。
 
@@ -90,7 +90,7 @@ cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git com
 
 若想写具体更新说明，把 `-m "更新"` 改成例如 `-m "优化背景图加载"` 即可。推送完成后，GitHub Pages 会自动重新部署。
 
-**让手机端马上看到新版本**：推送后若手机仍显示旧版，是浏览器缓存。在项目里全局搜索 `?v=1.5.4` 全部替换为 `?v=1.5.5`（再下次就替换成 `?v=1.6`），再执行上面命令推送一次，手机刷新后就会拉新文件。
+**让手机端马上看到新版本**：推送后若手机仍显示旧版，是浏览器缓存。在项目里全局搜索 `?v=1.5.5` 全部替换为 `?v=1.6`，再执行上面命令推送一次，手机刷新后就会拉新文件。
 
 ---
 
@@ -103,18 +103,9 @@ cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git com
 
 ---
 
-## 八、黄历接口（可选）
+## 八、黄历（占卜宜忌）
 
-占卜页的「宜/忌」支持用聚合数据老黄历接口，**API key 不能写在前端**，否则谁都能看到。做法是：
-
-1. **部署黄历代理**：项目里已带 `api/huangli.js`，可部署到 [Vercel](https://vercel.com)（连 GitHub 仓库后自动部署）。
-2. **在 Vercel 配置 key**：项目 → Settings → Environment Variables，添加 `JUHE_ALMANAC_KEY`，值为你在 [聚合数据](https://dashboard.juhe.cn) 申请的老黄历 key。保存后重新部署一次。
-3. **前端指向代理**：在 `index.html` 里、在加载 `divine.js` 之前加一行（把地址换成你自己的 Vercel 接口地址）：
-   ```html
-   <script>window.MahjongApp = window.MahjongApp || {}; window.MahjongApp.juheProxyUrl = 'https://你的项目.vercel.app/api/huangli';</script>
-   ```
-   若不想把代理地址提交到仓库，可建一个本地的 `config.js`（并加入 `.gitignore`），在 `index.html` 里用 `<script src="config.js"></script>` 引入，在 `config.js` 里写 `window.MahjongApp.juheProxyUrl = '...';`。
-
-不配置代理时，占卜页会使用内置黄历表 + 默认规则，不请求外网，功能够用。
+占卜页的「宜/忌」直接请求 [聚合数据](https://www.juhe.cn/docs/api/id/65) 老黄历接口，按公历日期缓存，同一天只请求一次。请求超时（约 8 秒）或失败时自动用内置黄历表。  
+API key 写在 `src/js/divine.js` 的 `JUHE_ALMANAC_KEY`，若需更换 key 可自行修改该处。
 
 完成以上步骤后，H5 即通过 GitHub Pages 上公网，免费使用。

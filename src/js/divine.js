@@ -33,8 +33,10 @@
     return mStr + dStr;
   }
 
-  /* 黄历：通过代理接口获取（key 仅保存在服务端），按公历日期缓存 */
+  /* 黄历：直接请求聚合数据 API，按公历日期缓存；超时或失败则用内置表 */
+  var JUHE_ALMANAC_KEY = '937dc5a44082eb06024ad7955c38df6b';
   var ALCACHE_PREFIX = 'juhe_hl_';
+  var ALCACHE_TIMEOUT_MS = 8000;
 
   function pad2(n) { return n < 10 ? '0' + n : String(n); }
 
@@ -60,30 +62,35 @@
     return { yi: yi, ji: ji };
   }
 
-  /** 请求代理接口：GET ?date=YYYY-MM-DD，返回 { yi, ji }（字符串或数组均可） */
-  function fetchAlmanacViaProxy(dateStr) {
-    var base = (window.MahjongApp && window.MahjongApp.juheProxyUrl) || '';
-    if (!base) return Promise.reject(new Error('no proxy'));
-    var url = base.replace(/\?$/, '') + (base.indexOf('?') >= 0 ? '&' : '?') + 'date=' + encodeURIComponent(dateStr);
-    return fetch(url)
+  /** 直接请求聚合老黄历：GET key&date=YYYY-MM-DD，带超时 */
+  function fetchJuheAlmanac(dateStr) {
+    var url = 'https://v.juhe.cn/laohuangli/d?key=' + encodeURIComponent(JUHE_ALMANAC_KEY) + '&date=' + encodeURIComponent(dateStr);
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function () { controller.abort(); }, ALCACHE_TIMEOUT_MS);
+    return fetch(url, { signal: controller.signal })
       .then(function (res) {
+        clearTimeout(timeoutId);
         if (!res.ok) return Promise.reject(new Error(res.statusText));
         return res.json();
       })
       .then(function (json) {
-        if (!json || (json.yi === undefined && json.result === undefined))
-          return Promise.reject(new Error('invalid response'));
-        var r = json.result ? { yi: json.result.yi, ji: json.result.ji } : { yi: json.yi, ji: json.ji };
+        if (json.error_code !== 0) return Promise.reject(new Error(json.reason || 'error_code ' + json.error_code));
+        var r = json.result;
+        if (!r) return Promise.reject(new Error('no result'));
         return parseYiJi(r.yi, r.ji);
+      })
+      .catch(function (e) {
+        clearTimeout(timeoutId);
+        return Promise.reject(e);
       });
   }
 
-  /** 按公历日期取黄历宜忌：先读缓存；未命中且配置了代理则请求代理并写缓存；失败则用内置表 */
+  /** 按公历日期取黄历宜忌：先读缓存；未命中则请求聚合并写缓存；超时或失败则用内置表 */
   function getAlmanacAsync(solarY, solarM, solarD) {
     var dateStr = solarY + '-' + pad2(solarM) + '-' + pad2(solarD);
     var cached = getAlmanacFromCache(dateStr);
     if (cached) return Promise.resolve(cached);
-    return fetchAlmanacViaProxy(dateStr)
+    return fetchJuheAlmanac(dateStr)
       .then(function (data) {
         setAlmanacCache(dateStr, data);
         return data;
@@ -216,7 +223,7 @@
         '<span class="divine-date-lunar"> · ' + data.escapeHtml((lunar.gzYear ? lunar.gzYear + '年' : '') + formatLunarMD(lunar.month, lunar.day)) + '</span>' +
       '</div>' +
       '<div class="divine-almanac"><p class="divine-yi">宜 加载中…</p><p class="divine-ji">忌 —</p></div>' +
-      '<p class="divine-level-label">当日麻运</p><div class="divine-level divine-level-1"><img src="assets/images/ping.png?v=1.5.4" alt="平" class="divine-level-img" decoding="async" /></div>' +
+      '<p class="divine-level-label">当日麻运</p><div class="divine-level divine-level-1"><img src="assets/images/ping.png?v=1.5.5" alt="平" class="divine-level-img" decoding="async" /></div>' +
       '<p class="divine-hint divine-hint-main">—</p><div class="divine-hint-divider"></div><p class="divine-hint divine-hint-sub">—</p>';
     getAlmanacAsync(y, m, d).then(function (alm) {
       var baseLevel = almanacToLevel(alm.yi, alm.ji);
@@ -248,7 +255,7 @@
           '<p class="divine-ji">忌 ' + (alm.ji.length ? alm.ji.join('、') : '—') + '</p>' +
         '</div>' +
         '<p class="divine-level-label">当日麻运</p>' +
-        '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '?v=1.5.4" alt="' + levelAlt + '" class="divine-level-img" decoding="async" /></div>' +
+        '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '?v=1.5.5" alt="' + levelAlt + '" class="divine-level-img" decoding="async" /></div>' +
         '<p class="divine-hint divine-hint-main">' + mainMarkup + '</p>' +
         '<div class="divine-hint-divider"></div>' +
         '<p class="divine-hint divine-hint-sub">' + data.escapeHtml(hintSub) + '</p>' +
