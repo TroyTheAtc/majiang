@@ -453,7 +453,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(255, 248, 228, 0.6);
+  background: rgba(255, 248, 228, 1);
   border-radius: 20px;
   pointer-events: none;
   z-index: 0;
@@ -474,23 +474,25 @@ body {
 }
 
 .divine-almanac {
-  background: var(--tile-bg);
-  border: 1px solid var(--tile-border);
+  background: linear-gradient(135deg, var(--red-main) 0%, var(--red-light) 50%, #6b0000 100%);
+  border: 2px solid var(--gold);
   border-radius: var(--radius-tile);
   padding: 14px 18px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15);
   text-align: left;
 }
 
-.divine-yi, .divine-ji {
+.divine-almanac .divine-yi,
+.divine-almanac .divine-ji {
   margin: 0 0 6px 0;
   font-size: 0.95rem;
-  color: var(--text);
+  color: rgba(255, 248, 228, 0.98);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-.divine-ji { margin-bottom: 0; color: var(--text-muted); }
-.divine-yi { color: var(--red-main); }
+.divine-almanac .divine-ji { margin-bottom: 0; color: rgba(255, 248, 228, 0.85); }
+.divine-almanac .divine-yi { color: var(--gold-light); }
 
 .divine-level-label {
   font-size: 1.17rem;
@@ -500,33 +502,51 @@ body {
 }
 
 .divine-level {
-  font-family: "FZZJ-XHLTJW", "方正字迹-心海龙体 简", "Noto Serif SC", "ZCOOL KuaiLe", "STKaiti", "楷体", "KaiTi", "SimKai", serif;
-  font-size: 2.75rem;
-  font-weight: 700;
-  letter-spacing: 0.25em;
   margin: 0 0 16px 0;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-/* 宜守、平：麻将绿（与牌面「发」同色） */
-.divine-level-0,
-.divine-level-1 {
-  color: var(--loss);
-  text-shadow: 0 2px 4px rgba(46,125,50,0.25);
-}
-
-.divine-level-2,
-.divine-level-3 {
-  color: var(--red-main);
-  text-shadow: 0 2px 4px rgba(139,0,0,0.25);
+.divine-level-img {
+  display: block;
+  margin: 0 auto;
+  max-width: 140px;
+  height: auto;
+  vertical-align: middle;
 }
 
 .divine-hint {
-  font-size: 0.9rem;
-  color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
   padding: 0 8px;
+}
+
+.divine-hint-main {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.divine-quote-line1,
+.divine-quote-line2 {
+  display: block;
+  margin: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+
+.divine-hint-divider {
+  height: 0;
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 10px 8px 10px;
+}
+
+.divine-hint-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0;
 }
 
 /* ========== 新增表单 ========== */

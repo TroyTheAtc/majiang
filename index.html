@@ -7,11 +7,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>老婆的麻将日记</title>
-  <link rel="preload" href="assets/images/background.jpg?v=1.5.1" as="image" />
+  <link rel="preload" href="assets/images/background.jpg?v=1.5.2" as="image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="src/css/style.css?v=1.5.1" />
+  <link rel="stylesheet" href="src/css/style.css?v=1.5.2" />
 </head>
 <body>
   <div class="app">
@@ -72,7 +72,7 @@
               <label class="chip chip-win"><input type="radio" name="winloss" value="win" required /><span>赢</span></label>
               <label class="chip chip-loss"><input type="radio" name="winloss" value="loss" /><span>输</span></label>
             </div>
-            <input type="number" id="field-amount" name="amount" placeholder="输入金额（元）" min="0" step="1" required />
+            <input type="number" id="field-amount" name="amount" placeholder="输入比分" min="0" step="1" required />
           </div>
           <button type="submit" class="btn btn-primary">保存</button>
         </form>
@@ -111,12 +111,14 @@
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
-  <script src="src/js/data.js?v=1.5.1"></script>
-  <script src="src/js/stats.js?v=1.5.1"></script>
-  <script src="src/js/view.js?v=1.5.1"></script>
-  <script src="src/js/add.js?v=1.5.1"></script>
-  <script src="src/js/list.js?v=1.5.1"></script>
-  <script src="src/js/divine.js?v=1.5.1"></script>
-  <script src="src/js/app.js?v=1.5.1"></script>
+  <!-- 农历库：优先本地，避免 CDN 未加载导致显示正月初一 -->
+  <script src="assets/js/solarlunar.min.js"></script>
+  <script src="src/js/data.js?v=1.5.2"></script>
+  <script src="src/js/stats.js?v=1.5.2"></script>
+  <script src="src/js/view.js?v=1.5.2"></script>
+  <script src="src/js/add.js?v=1.5.2"></script>
+  <script src="src/js/list.js?v=1.5.2"></script>
+  <script src="src/js/divine.js?v=1.5.2"></script>
+  <script src="src/js/app.js?v=1.5.2"></script>
 </body>
 </html>

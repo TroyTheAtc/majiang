@@ -14,74 +14,17 @@
     '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
     '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
 
-  /* 农历 1900-2100 年信息（每项低12位为12个月大小月 1=30天 0=29天，高4位为闰月月份 0=无闰） */
-  var lunarInfo = [
-    0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
-    0x04ae0, 0x0a4b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
-    0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,
-    0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,
-    0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,
-    0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5d0, 0x14573, 0x052d0, 0x0a9a8, 0x0e950, 0x06aa0,
-    0x0aad4, 0x092d0, 0x0d954, 0x0d4a0, 0x0da50, 0x1d552, 0x0b550, 0x056a0, 0x0a5b0, 0x0a6d6,
-    0x0a2e0, 0x0e950, 0x06e95, 0x0d650, 0x0d2a0, 0x0da50, 0x0aa54, 0x056d0, 0x026d0, 0x092d0,
-    0x0d954, 0x0b4a0, 0x0b4a0, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0, 0x14b63, 0x09370,
-    0x04970, 0x064b0, 0x168a6, 0x0ea50, 0x06b20, 0x1a6c4, 0x0aae0, 0x0a2e0, 0x0d2e0, 0x0d260,
-    0x1ea65, 0x0d530, 0x05aa0, 0x076a3, 0x096d0, 0x04afb, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250,
-    0x0d520, 0x0dd45, 0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255,
-    0x06d20, 0x0ada0, 0x14b63, 0x09370, 0x04970, 0x064b0, 0x168a6, 0x0ea50, 0x06b20, 0x1a6c4,
-    0x0aae0, 0x0a2e0, 0x0d2e0, 0x0d260, 0x1ea65, 0x0d530, 0x05aa0, 0x076a3, 0x096d0, 0x04afb,
-    0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45, 0x0b5a0, 0x056d0, 0x055b2, 0x049b0,
-    0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0, 0x14b63, 0x09370, 0x04970, 0x064b0,
-    0x168a6, 0x0ea50, 0x06b20, 0x1a6c4, 0x0aae0, 0x0a2e0, 0x0d2e0, 0x0d260, 0x1ea65, 0x0d530,
-    0x05aa0, 0x076a3, 0x096d0, 0x04afb, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,
-    0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0
-  ];
-
-  function getLunarMonthDays(year, month) {
-    var idx = year - 1900;
-    var info = lunarInfo[idx] || lunarInfo[Math.min(idx, lunarInfo.length - 1)];
-    return 29 + ((info >> (month - 1)) & 1);
-  }
-
-  function getLunarYearDays(year) {
-    var idx = year - 1900;
-    var info = lunarInfo[idx] || lunarInfo[lunarInfo.length - 1];
-    var total = 0;
-    for (var m = 1; m <= 12; m++) total += getLunarMonthDays(year, m);
-    var leap = (info >> 12) & 0xf;
-    if (leap > 0) total += getLunarMonthDays(year, leap);
-    return total;
-  }
-
+  /* 公历转农历：使用 solarlunar 库（CDN 引入），返回 { year, month, day } 供宜忌与展示用 */
   function solar2lunar(y, m, d) {
-    var base = new Date(1900, 0, 31);
-    var target = new Date(y, m - 1, d);
-    var offset = Math.floor((target - base) / 86400000);
-    if (offset < 0) return { month: 1, day: 1, year: 1900 };
-
-    var ly = 1900;
-    while (ly <= 2100) {
-      var days = getLunarYearDays(ly);
-      if (offset < days) break;
-      offset -= days;
-      ly++;
+    var api = (window.solarLunar && (window.solarLunar.solar2lunar || (window.solarLunar.default && window.solarLunar.default.solar2lunar)))
+      ? (window.solarLunar.solar2lunar ? window.solarLunar : window.solarLunar.default)
+      : null;
+    if (!api || typeof api.solar2lunar !== 'function') {
+      return { year: 1900, month: 1, day: 1, gzYear: '' };
     }
-
-    var info = lunarInfo[ly - 1900] || lunarInfo[lunarInfo.length - 1];
-    var leapMonth = (info >> 12) & 0xf;
-    var lm = 1;
-    while (lm <= 12) {
-      var md = getLunarMonthDays(ly, lm);
-      if (offset < md) break;
-      offset -= md;
-      if (leapMonth === lm) {
-        var lmd = getLunarMonthDays(ly, lm);
-        if (offset < lmd) break;
-        offset -= lmd;
-      }
-      lm++;
-    }
-    return { year: ly, month: lm, day: offset + 1 };
+    var r = api.solar2lunar(y, m, d);
+    if (!r) return { year: 1900, month: 1, day: 1, gzYear: '' };
+    return { year: r.lYear, month: r.lMonth, day: r.lDay, gzYear: r.gzYear || '' };
   }
 
   function formatLunarMD(month, day) {
@@ -90,41 +33,51 @@
     return mStr + dStr;
   }
 
-  /* 黄历宜忌：key 为 "月-日"（农历），无则走默认 */
+
+  /* 黄历宜忌：key 为 "月-日"（农历），诸事皆宜/诸事不宜一并写入表内 */
   var almanac = {
-    '1-1': { yi: ['祭祀', '祈福', '会友'], ji: ['开市', '嫁娶'] },
-    '1-5': { yi: ['祭祀', '会友'], ji: ['博戏', '求财'] },
-    '1-15': { yi: ['祭祀', '祈福'], ji: ['博戏', '动土'] },
-    '1-8': { yi: ['求财', '纳财', '会友'], ji: [] },
-    '1-18': { yi: ['求财', '纳财'], ji: [] },
-    '1-28': { yi: ['求财', '纳财', '开市'], ji: [] },
-    '2-2': { yi: ['祭祀', '会友'], ji: ['博戏'] },
-    '2-8': { yi: ['求财', '纳财'], ji: [] },
-    '2-15': { yi: ['祭祀'], ji: ['博戏'] },
-    '5-5': { yi: ['祭祀', '祈福'], ji: ['博戏', '动土'] },
-    '8-15': { yi: ['会友', '祈福'], ji: ['博戏'] },
-    '12-8': { yi: ['祭祀', '祈福'], ji: ['博戏'] },
-    '12-23': { yi: ['祭祀'], ji: ['博戏', '求财'] }
+    '1-1': { yi: ['诸事皆宜', '祭祀', '祈福', '会友'], ji: ['开市', '嫁娶'] },
+    '1-5': { yi: ['祭祀', '会友'], ji: ['诸事不宜', '博戏', '求财'] },
+    '1-15': { yi: ['祭祀', '祈福'], ji: ['诸事不宜', '博戏', '动土'] },
+    '1-8': { yi: ['诸事皆宜', '求财', '纳财', '会友'], ji: [] },
+    '1-18': { yi: ['诸事皆宜', '求财', '纳财'], ji: [] },
+    '1-28': { yi: ['诸事皆宜', '求财', '纳财', '开市'], ji: [] },
+    '2-2': { yi: ['祭祀', '会友'], ji: ['诸事不宜', '博戏'] },
+    '2-8': { yi: ['诸事皆宜', '求财', '纳财'], ji: [] },
+    '2-15': { yi: ['祭祀'], ji: ['诸事不宜', '博戏'] },
+    '5-5': { yi: ['祭祀', '祈福'], ji: ['诸事不宜', '博戏', '动土'] },
+    '8-15': { yi: ['会友', '祈福'], ji: ['诸事不宜', '博戏'] },
+    '12-8': { yi: ['祭祀', '祈福'], ji: ['诸事不宜', '博戏'] },
+    '12-23': { yi: ['祭祀'], ji: ['诸事不宜', '博戏', '求财'] }
   };
 
   function getAlmanac(lunarMonth, lunarDay) {
     var key = lunarMonth + '-' + lunarDay;
     var a = almanac[key];
     if (a) return { yi: a.yi.slice(), ji: a.ji.slice() };
-    /* 默认：初一、十五忌博戏；初八、十八、二十八宜求财 */
+    /* 默认：初一、十五忌博戏；初八、十八、二十八宜求财；诸事皆宜/诸事不宜随日写入 */
     var yi = ['会友'];
     var ji = [];
-    if (lunarDay === 1 || lunarDay === 15) ji.push('博戏');
+    if (lunarDay === 1 || lunarDay === 15) {
+      ji.push('诸事不宜', '博戏');
+    } else {
+      yi.unshift('诸事皆宜');
+    }
     if (lunarDay === 8 || lunarDay === 18 || lunarDay === 28) yi.push('求财', '纳财');
     return { yi: yi, ji: ji };
   }
 
-  /* 根据宜忌得到基础等级：0=宜守 1=平 2=吉 3=大吉 */
+  /* 根据宜忌得到基础等级：0=宜守 1=平 2=吉 3=大吉（按流程图顺序判定） */
   function almanacToLevel(yi, ji) {
     var hasJiBo = ji.some(function (x) { return x === '博戏' || x === '赌博'; });
+    var hasJiAll = ji.some(function (x) { return x === '诸事不宜'; });
     var hasYiCai = yi.some(function (x) { return x === '求财' || x === '纳财'; });
-    if (hasJiBo && !hasYiCai) return 0;
-    if (hasJiBo && hasYiCai) return 1;
+    var hasYiAll = yi.some(function (x) { return x === '诸事皆宜'; });
+    /* 忌博戏 或 不宜求财 或 诸事不宜，任一成立 → 0 */
+    if (hasJiBo || !hasYiCai || hasJiAll) return 0;
+    /* 是否有"诸事皆宜"？ 是 → 3 */
+    if (hasYiAll) return 3;
+    /* 是否有"宜求财/纳财"？ 是 → 2，否 → 1 */
     if (hasYiCai) return 2;
     return 1;
   }
@@ -156,11 +109,36 @@
   }
 
   var levelNames = ['宜守', '平', '吉', '大吉'];
+  var levelImages = ['yishou.png', 'ping.png', 'ji.png', 'daji.png'];
   var levelHints = {
-    0: '黄历与同期皆宜守，今日少打为妙。',
-    1: '黄历平平，见机行事即可。',
-    2: '黄历宜求财，可小试手气。',
-    3: '黄历与同期皆利，宜出战。'
+    0: [
+      { main: '云掩蟾宫，潮退沙白。守静以待，勿触锋芒。', sub: '运势低迷，今日不宜上桌，静观其变为上。' },
+      { main: '月昏星匿，牌山如雾。宜观局，不宜入局。', sub: '手气混沌，看不清牌路，旁观比参战更明智。' },
+      { main: '霜落寒窗，蛰虫俯穴。今日之局，避之则吉。', sub: '天时不利，蛰伏休息，强行出战恐有损失。' },
+      { main: '逆风执炬，必有烧手之患。暂敛羽翼，以伺天时。', sub: '逆势而行容易自伤，今日宜守不宜攻。' },
+      { main: '水涸石出，鱼困浅滩。非战之罪，实乃势不至。', sub: '时机未到，非你技不如人，改日再战为佳。' }
+    ],
+    1: [
+      { main: '风过竹林，声动而叶不惊。可往，不可尽往。', sub: '有机会但需谨慎，小玩几局试探，不可恋战。' },
+      { main: '溪云初起，山雨未至。小酌可也，酣饮不宜。', sub: '局势未明，小试手气无妨，大动干戈则凶。' },
+      { main: '雾锁津渡，舟子缓行。试探深浅，再定去留。', sub: '先打几局摸摸底，顺风则进，逆风则退。' },
+      { main: '春冰未泮，履之需谨慎。半步可试，大步则危。', sub: '时机尚可但不稳固，小动作安全，大动作冒险。' },
+      { main: '棋到中局，胜负未分。观彼动静，再应其变。', sub: '今日变数较多，随机应变，不可固守一策。' }
+    ],
+    2: [
+      { main: '东南有风，送暖入怀。轻舟可发，莫恋远方。', sub: '手气不错，可以出战，但记得见好就收。' },
+      { main: '晨光初透，雀噪檐前。小利可图，大贪招损。', sub: '今日有小胜之机，贪心恋战则反噬。' },
+      { main: '新雨之后，苔痕渐绿。顺势而取，过之则枯。', sub: '运势上升期，抓住机会，但不可过度索取。' },
+      { main: '酒至微醺，花看半开。此中真意，适可而止。', sub: '今日佳境正当时，懂得收手才能留住胜果。' },
+      { main: '雁阵南来，气爽天高。小试锋芒，见好便收。', sub: '天时地利兼备，适度参与，忌持久战。' }
+    ],
+    3: [
+      { main: '紫微临位，四方来朝。此时不举，更待何时？', sub: '运势爆棚，今日宜主动出击，放手一搏。' },
+      { main: '天朗气清，惠风和畅。顺势而为，无往不利。', sub: '诸事顺遂，牌运亨通，大胆施展拳脚。' },
+      { main: '潮平两岸阔，风正一帆悬。今日之局，如臂使指。', sub: '天时地利人和，今日打牌得心应手，无往不胜。' },
+      { main: '三星高照，五福临门。牌运如泉涌，取之不竭。', sub: '吉星高照，手气正旺，今日多打几局有利可图。' },
+      { main: '江流天地，月涌大江。气运如虹，当仁不让。', sub: '气势如虹，今日宜乘胜追击，扩大战果。' }
+    ]
   };
 
   function renderDivine(dateStr) {
@@ -174,23 +152,36 @@
     var records = data.getRecords();
     var same = getSamePeriodStats(dateStr, records);
     var finalLevel = applySamePeriodAdjust(baseLevel, same);
-    var levelName = levelNames[finalLevel];
-    var hint = levelHints[finalLevel];
-    if (same.total > 0) {
-      hint = '历史同期' + same.total + '局、胜率' + (same.winRate * 100).toFixed(0) + '%，' + hint;
-    }
+
+    var hints = levelHints[finalLevel];
+    var chosen = hints[Math.floor(Math.random() * hints.length)];
+    var samePrefix = same.total > 0 ? (same.winRate >= 0.5 ? '历史同期无双牌浪，' : '历史同期手气欠佳，') : '';
+    var hintMain = samePrefix + chosen.main;
+    var hintSub = chosen.sub;
+
+    var idx = hintMain.indexOf('。');
+    var line1 = idx >= 0 ? hintMain.slice(0, idx + 1) : hintMain;
+    var line2 = idx >= 0 ? hintMain.slice(idx + 1).trim() : '';
+    var mainMarkup = line2
+      ? '<span class="divine-quote-line1">' + data.escapeHtml(line1) + '</span><span class="divine-quote-line2">' + data.escapeHtml(line2) + '</span>'
+      : data.escapeHtml(hintMain);
+
+    var levelImg = levelImages[finalLevel];
+    var levelAlt = levelNames[finalLevel];
 
     var container = document.getElementById('divine-content');
     if (!container) return;
     container.innerHTML =
-      '<div class="divine-date">' + dateStr + ' · 农历' + formatLunarMD(lunar.month, lunar.day) + '</div>' +
+      '<div class="divine-date">' + dateStr + ' · ' + (lunar.gzYear ? lunar.gzYear + '年' : '') + formatLunarMD(lunar.month, lunar.day) + '</div>' +
       '<div class="divine-almanac">' +
         '<p class="divine-yi">宜 ' + (alm.yi.length ? alm.yi.join('、') : '—') + '</p>' +
         '<p class="divine-ji">忌 ' + (alm.ji.length ? alm.ji.join('、') : '—') + '</p>' +
       '</div>' +
       '<p class="divine-level-label">今日麻运</p>' +
-      '<div class="divine-level divine-level-' + finalLevel + '">' + levelName + '</div>' +
-      '<p class="divine-hint">' + hint + '</p>';
+      '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '" alt="' + levelAlt + '" class="divine-level-img" /></div>' +
+      '<p class="divine-hint divine-hint-main">' + mainMarkup + '</p>' +
+      '<div class="divine-hint-divider"></div>' +
+      '<p class="divine-hint divine-hint-sub">' + data.escapeHtml(hintSub) + '</p>';
   }
 
   window.MahjongApp = window.MahjongApp || {};
