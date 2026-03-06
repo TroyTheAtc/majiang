@@ -101,4 +101,20 @@ cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git com
 - **国内访问慢或打不开**：GitHub 服务器在海外，国内网络可能较慢或偶发无法访问，可多试几次或换网络；若长期需国内访问可考虑腾讯云等方案。
 - **数据会丢吗**：不会。数据存在浏览器 localStorage 里，和访问的网址绑定；只要用同一个链接、同一台设备，数据会保留。
 
+---
+
+## 八、黄历接口（可选）
+
+占卜页的「宜/忌」支持用聚合数据老黄历接口，**API key 不能写在前端**，否则谁都能看到。做法是：
+
+1. **部署黄历代理**：项目里已带 `api/huangli.js`，可部署到 [Vercel](https://vercel.com)（连 GitHub 仓库后自动部署）。
+2. **在 Vercel 配置 key**：项目 → Settings → Environment Variables，添加 `JUHE_ALMANAC_KEY`，值为你在 [聚合数据](https://dashboard.juhe.cn) 申请的老黄历 key。保存后重新部署一次。
+3. **前端指向代理**：在 `index.html` 里、在加载 `divine.js` 之前加一行（把地址换成你自己的 Vercel 接口地址）：
+   ```html
+   <script>window.MahjongApp = window.MahjongApp || {}; window.MahjongApp.juheProxyUrl = 'https://你的项目.vercel.app/api/huangli';</script>
+   ```
+   若不想把代理地址提交到仓库，可建一个本地的 `config.js`（并加入 `.gitignore`），在 `index.html` 里用 `<script src="config.js"></script>` 引入，在 `config.js` 里写 `window.MahjongApp.juheProxyUrl = '...';`。
+
+不配置代理时，占卜页会使用内置黄历表 + 默认规则，不请求外网，功能够用。
+
 完成以上步骤后，H5 即通过 GitHub Pages 上公网，免费使用。

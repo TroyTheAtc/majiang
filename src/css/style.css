@@ -466,11 +466,39 @@ body {
   text-align: center;
 }
 
-.divine-date {
+.divine-date-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.2em;
+  margin-bottom: 16px;
+  font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", cursive;
   font-size: 0.95rem;
   color: var(--text-muted);
-  margin-bottom: 16px;
   letter-spacing: 0.1em;
+}
+
+.divine-date-input {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 2px 4px;
+  min-height: 1.4em;
+  cursor: pointer;
+}
+
+.divine-date-input::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.divine-date-lunar {
+  white-space: nowrap;
 }
 
 .divine-almanac {

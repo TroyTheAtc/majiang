@@ -93,6 +93,19 @@
   var dateInput = document.querySelector('[name="date"]');
   if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
 
+  var viewDivine = document.getElementById('view-divine');
+  if (viewDivine) {
+    viewDivine.addEventListener('change', function (e) {
+      if (e.target.id === 'divine-date-picker') {
+        var v = e.target.value;
+        if (v && window.MahjongApp && window.MahjongApp.divine) {
+          try { localStorage.setItem('divine_last_date', v); } catch (err) {}
+          window.MahjongApp.divine.renderDivine(v);
+        }
+      }
+    });
+  }
+
   updateEyeButton();
   renderList();
 })();
