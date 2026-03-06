@@ -81,8 +81,10 @@ git push -u origin main
 改完本地文件后，复制下面整行到终端执行，即可让公网生效（约 1～2 分钟）：
 
 ```bash
-cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git commit -m "更新" && git push
+cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git commit -m "更新" && git push -u origin main
 ```
+
+首次推送若提示 "no upstream branch"，用上面这条即可（`-u origin main` 会绑定远程分支）；之后也可直接 `git push`。
 
 若想写具体更新说明，把 `-m "更新"` 改成例如 `-m "优化背景图加载"` 即可。推送完成后，GitHub Pages 会自动重新部署。
 
