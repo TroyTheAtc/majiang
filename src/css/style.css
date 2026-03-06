@@ -549,6 +549,14 @@ body {
   margin-top: 0;
 }
 
+.divine-hint-same {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  margin-bottom: 0;
+  text-align: center;
+}
+
 /* ========== 新增表单 ========== */
 .form-add {
   padding: 24px 20px 28px;

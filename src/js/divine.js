@@ -156,7 +156,7 @@
     var hints = levelHints[finalLevel];
     var chosen = hints[Math.floor(Math.random() * hints.length)];
     var samePrefix = same.total > 0 ? (same.winRate >= 0.5 ? '历史同期无双牌浪，' : '历史同期手气欠佳，') : '';
-    var hintMain = samePrefix + chosen.main;
+    var hintMain = chosen.main;
     var hintSub = chosen.sub;
 
     var idx = hintMain.indexOf('。');
@@ -181,7 +181,8 @@
       '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '" alt="' + levelAlt + '" class="divine-level-img" /></div>' +
       '<p class="divine-hint divine-hint-main">' + mainMarkup + '</p>' +
       '<div class="divine-hint-divider"></div>' +
-      '<p class="divine-hint divine-hint-sub">' + data.escapeHtml(hintSub) + '</p>';
+      '<p class="divine-hint divine-hint-sub">' + data.escapeHtml(hintSub) + '</p>' +
+      (samePrefix ? '<p class="divine-hint divine-hint-same">' + data.escapeHtml(samePrefix) + '</p>' : '');
   }
 
   window.MahjongApp = window.MahjongApp || {};
