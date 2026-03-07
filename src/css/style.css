@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.6") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.7") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.6") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.7") center / cover no-repeat;
   }
 
   .app::before {
@@ -878,4 +878,16 @@ body {
 .safe-bottom {
   height: var(--safe-bottom);
   min-height: 8px;
+}
+
+/* 右下角版本号，便于确认手机端当前版本 */
+.app-version {
+  position: fixed;
+  right: 8px;
+  bottom: calc(4px + var(--safe-bottom));
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.65;
+  pointer-events: none;
+  z-index: 0;
 }

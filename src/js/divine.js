@@ -157,6 +157,18 @@
 
   var levelNames = ['宜守', '平', '吉', '大吉'];
   var levelImages = ['yishou.png', 'ping.png', 'ji.png', 'daji.png'];
+  var levelImgVersion = '1.5.7';
+
+  /* 方案一：提前请求并解码四张等级图，占卜展示时直接从缓存绘制，避免一点点刷新 */
+  (function preloadLevelImages() {
+    var base = 'assets/images/';
+    var v = levelImgVersion;
+    for (var i = 0; i < levelImages.length; i++) {
+      var img = new Image();
+      img.src = base + levelImages[i] + '?v=' + v;
+    }
+  })();
+
   var levelHints = {
     0: [
       { main: '云掩蟾宫，潮退沙白。守静以待，勿触锋芒。', sub: '运势低迷，今日不宜上桌，静观其变为上。' },
@@ -224,7 +236,7 @@
         '<p class="divine-ji">忌 ' + (alm.ji.length ? alm.ji.join('、') : '—') + '</p>' +
       '</div>' +
       '<p class="divine-level-label">当日麻运</p>' +
-      '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '?v=1.5.6" alt="' + levelAlt + '" class="divine-level-img" decoding="async" /></div>' +
+      '<div class="divine-level divine-level-' + finalLevel + '"><img src="assets/images/' + levelImg + '?v=' + levelImgVersion + '" alt="' + levelAlt + '" class="divine-level-img" decoding="async" /></div>' +
       '<p class="divine-hint divine-hint-main">' + mainMarkup + '</p>' +
       '<div class="divine-hint-divider"></div>' +
       '<p class="divine-hint divine-hint-sub">' + data.escapeHtml(hintSub) + '</p>' +
