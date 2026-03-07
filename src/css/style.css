@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.7") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.0") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.5.7") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.0") center / cover no-repeat;
   }
 
   .app::before {
@@ -867,12 +867,109 @@ body {
   letter-spacing: 0.15em;
 }
 
+.stats-category-item .stats-item-right {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.stats-category-item .stats-item-streak-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.stats-category-item .stats-item-streak {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.stats-category-item .stats-item-streak.streak-win { color: var(--win); }
+.stats-category-item .stats-item-streak.streak-loss { color: var(--loss); }
+
+.stats-category-item .stats-streak-arrow {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  object-fit: contain;
+}
+
 .stats-category-item .sum {
   font-weight: 400;
 }
 
 .stats-category-item .sum.positive { color: var(--win); }
 .stats-category-item .sum.negative { color: var(--loss); }
+
+.stats-category-item { cursor: pointer; }
+
+/* 算账项点击弹出的详情小卡片 */
+.stats-detail-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.4);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.stats-detail-overlay.is-open {
+  display: flex;
+}
+.stats-detail-card {
+  width: 100%;
+  max-width: 320px;
+  padding: 20px 24px;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-tile);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.stats-detail-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.15em;
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--tile-border);
+}
+.stats-detail-streak-wrap {
+  text-align: left;
+  margin-bottom: 12px;
+}
+.stats-detail-streak-wrap[aria-hidden="true"] {
+  display: none;
+}
+.stats-detail-streak {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+.stats-detail-streak.streak-win { color: var(--win); }
+.stats-detail-streak.streak-loss { color: var(--loss); }
+.stats-detail-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 24px;
+  font-size: 0.95rem;
+}
+.stats-detail-dl dt {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.stats-detail-dl dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 500;
+  color: var(--text);
+}
+.stats-detail-dl dd.positive { color: var(--win); }
+.stats-detail-dl dd.negative { color: var(--loss); }
+.stats-detail-dl .detail-val.positive { color: var(--win); }
+.stats-detail-dl .detail-val.negative { color: var(--loss); }
 
 /* 底部安全区 */
 .safe-bottom {

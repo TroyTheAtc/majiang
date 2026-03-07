@@ -7,15 +7,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>老婆的麻将日记</title>
-  <link rel="preload" href="assets/images/background.jpg?v=1.5.7" as="image" />
-  <link rel="preload" href="assets/images/yishou.png?v=1.5.7" as="image" fetchpriority="high" />
-  <link rel="preload" href="assets/images/ping.png?v=1.5.7" as="image" fetchpriority="high" />
-  <link rel="preload" href="assets/images/ji.png?v=1.5.7" as="image" fetchpriority="high" />
-  <link rel="preload" href="assets/images/daji.png?v=1.5.7" as="image" fetchpriority="high" />
+  <link rel="preload" href="assets/images/background.jpg?v=1.6.0" as="image" />
+  <link rel="preload" href="assets/images/yishou.png?v=1.6.0" as="image" />
+  <link rel="preload" href="assets/images/ping.png?v=1.6.0" as="image" />
+  <link rel="preload" href="assets/images/ji.png?v=1.6.0" as="image" />
+  <link rel="preload" href="assets/images/daji.png?v=1.6.0" as="image" />
+  <link rel="preload" href="assets/js/solarlunar.min.js" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="src/css/style.css?v=1.5.7" />
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" /></noscript>
+  <link rel="stylesheet" href="src/css/style.css?v=1.6.0" />
 </head>
 <body>
   <div class="app">
@@ -109,22 +111,40 @@
           </div>
           <ul id="stats-category-list"></ul>
         </div>
+        <!-- 点击某一项后弹出的详情小卡片 -->
+        <div id="stats-detail-overlay" class="stats-detail-overlay" aria-hidden="true">
+          <div class="stats-detail-card card-tile">
+            <div class="stats-detail-title" id="stats-detail-title">—</div>
+            <div class="stats-detail-streak-wrap" id="stats-detail-streak-wrap" aria-hidden="true">
+              <span id="stats-detail-streak" class="stats-detail-streak"></span>
+            </div>
+            <dl class="stats-detail-dl">
+              <dt>总局数</dt><dd id="stats-detail-total-games">0</dd>
+              <dt>胜利局数</dt><dd id="stats-detail-win-games">0</dd>
+              <dt>胜率</dt><dd id="stats-detail-win-rate">—</dd>
+              <dt>场均得分</dt><dd id="stats-detail-avg">—</dd>
+              <dt>最长连胜</dt><dd id="stats-detail-max-win-streak">—</dd>
+              <dt>最长连败</dt><dd id="stats-detail-max-loss-streak">—</dd>
+              <dt>单场最多得失</dt><dd id="stats-detail-single-extreme"><span id="stats-detail-single-max" class="detail-val">—</span> / <span id="stats-detail-single-min" class="detail-val">—</span></dd>
+            </dl>
+          </div>
+        </div>
       </section>
     </main>
 
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
-  <span class="app-version" aria-hidden="true">v1.5.7</span>
+  <span class="app-version" aria-hidden="true">v1.6.0</span>
   <!-- 农历与建除：solarlunar 用于展示，lunar-javascript 用于占卜宜忌（建除十二值日） -->
-  <script src="assets/js/solarlunar.min.js"></script>
-  <script src="https://cdn.bootcdn.net/ajax/libs/lunar-javascript/1.7.4/lunar.min.js"></script>
-  <script src="src/js/data.js?v=1.5.7"></script>
-  <script src="src/js/stats.js?v=1.5.7"></script>
-  <script src="src/js/view.js?v=1.5.7"></script>
-  <script src="src/js/add.js?v=1.5.7"></script>
-  <script src="src/js/list.js?v=1.5.7"></script>
-  <script src="src/js/divine.js?v=1.5.7"></script>
-  <script src="src/js/app.js?v=1.5.7"></script>
+  <script src="assets/js/solarlunar.min.js" defer></script>
+  <script src="assets/js/lunar.min.js?v=1.6.0" defer></script>
+  <script src="src/js/data.js?v=1.6.0" defer></script>
+  <script src="src/js/stats.js?v=1.6.0" defer></script>
+  <script src="src/js/view.js?v=1.6.0" defer></script>
+  <script src="src/js/add.js?v=1.6.0" defer></script>
+  <script src="src/js/list.js?v=1.6.0" defer></script>
+  <script src="src/js/divine.js?v=1.6.0" defer></script>
+  <script src="src/js/app.js?v=1.6.0" defer></script>
 </body>
 </html>
