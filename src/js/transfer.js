@@ -40,9 +40,18 @@
   }
 
   var lastExportJson = '';
+  var lastExportUrl = '';
 
   function isMobile() {
     return ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+  }
+
+  function isWechat() {
+    return /MicroMessenger/i.test(navigator.userAgent);
+  }
+
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   }
 
   function hideExportLinkWrap() {
@@ -50,35 +59,137 @@
     if (wrap) wrap.style.display = 'none';
   }
 
+  function revokeLastExportUrl() {
+    if (lastExportUrl) {
+      try { URL.revokeObjectURL(lastExportUrl); } catch (e) {}
+      lastExportUrl = '';
+    }
+  }
+
+  function attemptDownload(url, filename) {
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    try {
+      if (typeof MouseEvent === 'function') {
+        a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+      } else {
+        a.click();
+      }
+    } catch (e) {
+      a.click();
+    }
+    setTimeout(function () {
+      if (a.parentNode) document.body.removeChild(a);
+    }, 2000);
+  }
+
+  function showCopyOnly(message) {
+    var wrap = document.getElementById('transfer-export-link-wrap');
+    var hint = wrap ? wrap.querySelector('.transfer-export-hint') : null;
+    var link = document.getElementById('transfer-export-link');
+    var copyBtn = document.getElementById('btn-export-copy');
+    if (wrap) wrap.style.display = 'block';
+    if (hint) hint.textContent = message;
+    if (link) link.style.display = 'none';
+    if (copyBtn) {
+      copyBtn.style.display = 'block';
+      copyBtn.textContent = '复制 JSON 文本';
+      setTimeout(function () { try { copyBtn.click(); } catch (e) {} }, 300);
+    }
+  }
+
   function exportToFile() {
     var records = getRecords();
     var jsonStr = JSON.stringify(records, null, 2);
-    var now = new Date();
-    var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    var dateStr = new Date().toISOString().slice(0, 10);
     var filename = 'mahjong-records-' + dateStr + '.json';
-    if (isMobile()) {
-      lastExportJson = jsonStr;
-      var wrap = document.getElementById('transfer-export-link-wrap');
-      var link = document.getElementById('transfer-export-link');
-      if (wrap && link) {
-        link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
-        link.download = filename;
-        link.textContent = filename;
-        link.setAttribute('download', filename);
-        wrap.style.display = 'block';
-      }
-    } else {
-      var a = document.createElement('a');
-      a.download = filename;
-      var blob = new Blob([jsonStr], { type: 'application/json' });
-      a.href = URL.createObjectURL(blob);
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function () {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
-      }, 2000);
+    lastExportJson = jsonStr;
+    revokeLastExportUrl();
+
+    var blob = new Blob([jsonStr], { type: 'application/octet-stream' });
+    var url = URL.createObjectURL(blob);
+    lastExportUrl = url;
+
+    if (isWechat()) {
+      showCopyOnly('微信内限制自动下载，请复制文本后粘贴保存');
+      URL.revokeObjectURL(url);
+      lastExportUrl = '';
+      return;
     }
+
+    if (isIOS()) {
+      showCopyOnly('iOS 设备请使用「复制」或「分享」功能');
+      if (navigator.share) {
+        try {
+          var fileIOS = new File([jsonStr], filename, { type: 'application/json' });
+          if (navigator.canShare && navigator.canShare({ files: [fileIOS] })) {
+            navigator.share({
+              files: [fileIOS],
+              title: '麻将日记备份',
+              text: '我的麻将记录备份'
+            }).then(function () {
+              alert('已分享');
+              URL.revokeObjectURL(url);
+              lastExportUrl = '';
+            }).catch(function () {
+              setTimeout(revokeLastExportUrl, 60000);
+            });
+            return;
+          }
+        } catch (e) {}
+      }
+      setTimeout(revokeLastExportUrl, 60000);
+      return;
+    }
+
+    function doExportFallback() {
+      if (isMobile()) {
+        var wrap = document.getElementById('transfer-export-link-wrap');
+        var hint = wrap ? wrap.querySelector('.transfer-export-hint') : null;
+        var link = document.getElementById('transfer-export-link');
+        var copyBtn = document.getElementById('btn-export-copy');
+        if (wrap) wrap.style.display = 'block';
+        if (hint) hint.textContent = '正在尝试下载，若未成功请使用：';
+        if (copyBtn) {
+          copyBtn.style.display = 'block';
+          copyBtn.textContent = '复制 JSON 文本（粘贴到备忘录保存）';
+        }
+        if (link) {
+          link.href = url;
+          link.download = filename;
+          link.textContent = '点击下载 ' + filename;
+          link.style.display = '';
+        }
+        setTimeout(function () { attemptDownload(url, filename); }, 300);
+        setTimeout(revokeLastExportUrl, 60000);
+      } else {
+        attemptDownload(url, filename);
+        setTimeout(function () { URL.revokeObjectURL(url); lastExportUrl = ''; }, 2000);
+      }
+    }
+
+    if (isMobile() && navigator.share) {
+      try {
+        var file = new File([jsonStr], filename, { type: 'application/json' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({
+            files: [file],
+            title: '麻将日记备份',
+            text: '我的麻将记录备份'
+          }).then(function () {
+            alert('已分享');
+            URL.revokeObjectURL(url);
+            lastExportUrl = '';
+          }).catch(function () { doExportFallback(); });
+          return;
+        }
+      } catch (e) {}
+    }
+
+    doExportFallback();
   }
 
   function importFromFile(file) {
@@ -108,6 +219,7 @@
   }
 
   function openTransferOverlay() {
+    revokeLastExportUrl();
     hideExportLinkWrap();
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
@@ -118,6 +230,7 @@
 
   function closeTransferOverlay() {
     hideExportLinkWrap();
+    if (lastExportUrl) setTimeout(revokeLastExportUrl, 1000);
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
       overlay.classList.remove('is-open');
