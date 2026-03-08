@@ -127,6 +127,11 @@
           <div class="transfer-overlay-panel card-tile">
             <p class="transfer-desc">通过 JSON 文件备份、恢复或传给对方</p>
             <button type="button" id="btn-export-file" class="btn btn-primary btn-block">导出为文件</button>
+            <div id="transfer-export-link-wrap" class="transfer-export-link-wrap" style="display:none">
+              <p class="transfer-export-hint">请点击下方链接下载（手机端）：</p>
+              <a id="transfer-export-link" class="transfer-export-link"></a>
+              <button type="button" id="btn-export-copy" class="btn btn-outline btn-block transfer-export-copy">复制到剪贴板</button>
+            </div>
             <button type="button" id="btn-import-file" class="btn btn-outline btn-block">从文件导入</button>
             <input type="file" id="input-import-file" accept=".json,application/json" style="display:none" />
             <button type="button" class="btn btn-outline btn-block close-transfer-btn">关闭</button>

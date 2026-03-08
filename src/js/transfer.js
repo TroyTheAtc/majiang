@@ -39,8 +39,15 @@
     });
   }
 
+  var lastExportJson = '';
+
   function isMobile() {
     return ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+  }
+
+  function hideExportLinkWrap() {
+    var wrap = document.getElementById('transfer-export-link-wrap');
+    if (wrap) wrap.style.display = 'none';
   }
 
   function exportToFile() {
@@ -49,14 +56,20 @@
     var now = new Date();
     var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     var filename = 'mahjong-records-' + dateStr + '.json';
-    var a = document.createElement('a');
-    a.download = filename;
     if (isMobile()) {
-      a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      lastExportJson = jsonStr;
+      var wrap = document.getElementById('transfer-export-link-wrap');
+      var link = document.getElementById('transfer-export-link');
+      if (wrap && link) {
+        link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
+        link.download = filename;
+        link.textContent = filename;
+        link.setAttribute('download', filename);
+        wrap.style.display = 'block';
+      }
     } else {
+      var a = document.createElement('a');
+      a.download = filename;
       var blob = new Blob([jsonStr], { type: 'application/json' });
       a.href = URL.createObjectURL(blob);
       document.body.appendChild(a);
@@ -95,6 +108,7 @@
   }
 
   function openTransferOverlay() {
+    hideExportLinkWrap();
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
       overlay.classList.add('is-open');
@@ -103,6 +117,7 @@
   }
 
   function closeTransferOverlay() {
+    hideExportLinkWrap();
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
       overlay.classList.remove('is-open');
@@ -126,6 +141,26 @@
     });
 
     if (btnExportFile) btnExportFile.addEventListener('click', exportToFile);
+
+    var btnExportCopy = document.getElementById('btn-export-copy');
+    if (btnExportCopy) btnExportCopy.addEventListener('click', function () {
+      if (!lastExportJson) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lastExportJson).then(function () { alert('已复制到剪贴板'); }).catch(function () { alert('复制失败'); });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = lastExportJson;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          alert('已复制到剪贴板');
+        } catch (e) { alert('复制失败'); }
+        document.body.removeChild(ta);
+      }
+    });
 
     if (btnImportFile && inputImportFile) {
       btnImportFile.addEventListener('click', function () { inputImportFile.click(); });
