@@ -1,5 +1,5 @@
 /**
- * 导入/导出：JSON 文件导出与导入
+ * 导入/导出：JSON 文件导出与导入（含鸿蒙 / iOS 适配）
  */
 (function () {
   'use strict';
@@ -41,6 +41,7 @@
 
   var lastExportJson = '';
   var lastExportUrl = '';
+  var isExporting = false;
 
   function isMobile() {
     return ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
@@ -50,13 +51,32 @@
     return /MicroMessenger/i.test(navigator.userAgent);
   }
 
+  function isHarmonyOS() {
+    return /HarmonyOS|HMOS|OpenHarmony/i.test(navigator.userAgent);
+  }
+
   function isIOS() {
+    if (isHarmonyOS()) return false;
     return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   }
 
   function hideExportLinkWrap() {
     var wrap = document.getElementById('transfer-export-link-wrap');
     if (wrap) wrap.style.display = 'none';
+  }
+
+  function hideImportPasteWrap() {
+    var wrap = document.getElementById('transfer-import-paste-wrap');
+    var ta = document.getElementById('input-import-paste');
+    if (wrap) wrap.style.display = 'none';
+    if (ta) ta.value = '';
+  }
+
+  function showImportPasteWrap() {
+    var wrap = document.getElementById('transfer-import-paste-wrap');
+    var ta = document.getElementById('input-import-paste');
+    if (wrap) wrap.style.display = 'block';
+    if (ta) { ta.value = ''; ta.focus(); }
   }
 
   function revokeLastExportUrl() {
@@ -101,119 +121,135 @@
     }
   }
 
+  function trySystemShare(url, jsonStr, filename) {
+    if (!navigator.share) return false;
+    try {
+      var file = new File([jsonStr], filename, { type: 'application/json' });
+      if (!navigator.canShare || !navigator.canShare({ files: [file] })) return false;
+      navigator.share({
+        files: [file],
+        title: '麻将日记备份',
+        text: '我的麻将记录备份'
+      }).then(function () {
+        alert('已分享');
+        URL.revokeObjectURL(url);
+        lastExportUrl = '';
+        isExporting = false;
+      }).catch(function () {
+        setTimeout(function () {
+          isExporting = false;
+          revokeLastExportUrl();
+        }, 60000);
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function doExportFallback(url, filename, hintText) {
+    if (isMobile()) {
+      var wrap = document.getElementById('transfer-export-link-wrap');
+      var hint = wrap ? wrap.querySelector('.transfer-export-hint') : null;
+      var link = document.getElementById('transfer-export-link');
+      var copyBtn = document.getElementById('btn-export-copy');
+      if (wrap) wrap.style.display = 'block';
+      if (hint) hint.textContent = hintText || '正在尝试下载，若未成功请使用：';
+      if (copyBtn) {
+        copyBtn.style.display = 'block';
+        copyBtn.textContent = '复制 JSON 文本（粘贴到备忘录保存）';
+      }
+      if (link) {
+        link.href = url;
+        link.download = filename;
+        link.textContent = '点击下载 ' + filename;
+        link.style.display = '';
+      }
+      setTimeout(function () { attemptDownload(url, filename); }, 300);
+      setTimeout(function () {
+        isExporting = false;
+        revokeLastExportUrl();
+      }, 60000);
+    } else {
+      attemptDownload(url, filename);
+      setTimeout(function () {
+        URL.revokeObjectURL(url);
+        lastExportUrl = '';
+        isExporting = false;
+      }, 2000);
+    }
+  }
+
   function exportToFile() {
     var records = getRecords();
     var jsonStr = JSON.stringify(records, null, 2);
     var dateStr = new Date().toISOString().slice(0, 10);
     var filename = 'mahjong-records-' + dateStr + '.json';
     lastExportJson = jsonStr;
+    isExporting = true;
     revokeLastExportUrl();
 
     var blob = new Blob([jsonStr], { type: 'application/octet-stream' });
     var url = URL.createObjectURL(blob);
     lastExportUrl = url;
 
+    setTimeout(function () { isExporting = false; }, 60000);
+
     if (isWechat()) {
       showCopyOnly('微信内限制自动下载，请复制文本后粘贴保存');
       URL.revokeObjectURL(url);
       lastExportUrl = '';
+      isExporting = false;
       return;
     }
 
     if (isIOS()) {
       showCopyOnly('iOS 设备请使用「复制」或「分享」功能');
-      if (navigator.share) {
-        try {
-          var fileIOS = new File([jsonStr], filename, { type: 'application/json' });
-          if (navigator.canShare && navigator.canShare({ files: [fileIOS] })) {
-            navigator.share({
-              files: [fileIOS],
-              title: '麻将日记备份',
-              text: '我的麻将记录备份'
-            }).then(function () {
-              alert('已分享');
-              URL.revokeObjectURL(url);
-              lastExportUrl = '';
-            }).catch(function () {
-              setTimeout(revokeLastExportUrl, 60000);
-            });
-            return;
-          }
-        } catch (e) {}
-      }
-      setTimeout(revokeLastExportUrl, 60000);
+      trySystemShare(url, jsonStr, filename);
       return;
     }
 
-    function doExportFallback() {
-      if (isMobile()) {
-        var wrap = document.getElementById('transfer-export-link-wrap');
-        var hint = wrap ? wrap.querySelector('.transfer-export-hint') : null;
-        var link = document.getElementById('transfer-export-link');
-        var copyBtn = document.getElementById('btn-export-copy');
-        if (wrap) wrap.style.display = 'block';
-        if (hint) hint.textContent = '正在尝试下载，若未成功请使用：';
-        if (copyBtn) {
-          copyBtn.style.display = 'block';
-          copyBtn.textContent = '复制 JSON 文本（粘贴到备忘录保存）';
-        }
-        if (link) {
-          link.href = url;
-          link.download = filename;
-          link.textContent = '点击下载 ' + filename;
-          link.style.display = '';
-        }
-        setTimeout(function () { attemptDownload(url, filename); }, 300);
-        setTimeout(revokeLastExportUrl, 60000);
-      } else {
-        attemptDownload(url, filename);
-        setTimeout(function () { URL.revokeObjectURL(url); lastExportUrl = ''; }, 2000);
-      }
+    if (isHarmonyOS()) {
+      if (trySystemShare(url, jsonStr, filename)) return;
+      doExportFallback(url, filename, '鸿蒙设备：点击下载，或长按链接保存');
+      return;
     }
 
-    if (isMobile() && navigator.share) {
-      try {
-        var file = new File([jsonStr], filename, { type: 'application/json' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          navigator.share({
-            files: [file],
-            title: '麻将日记备份',
-            text: '我的麻将记录备份'
-          }).then(function () {
-            alert('已分享');
-            URL.revokeObjectURL(url);
-            lastExportUrl = '';
-          }).catch(function () { doExportFallback(); });
-          return;
-        }
-      } catch (e) {}
-    }
+    if (isMobile() && trySystemShare(url, jsonStr, filename)) return;
 
-    doExportFallback();
+    doExportFallback(url, filename, '正在尝试下载，若未成功请使用：');
+  }
+
+  function importFromJsonString(text) {
+    if (typeof text !== 'string') return;
+    var trimmed = text.trim();
+    if (!trimmed) {
+      alert('没有可导入的内容');
+      return;
+    }
+    var arr;
+    try {
+      arr = JSON.parse(trimmed);
+    } catch (e) {
+      alert('格式无效，请确认是完整的 JSON 数据');
+      return;
+    }
+    if (!validateRecords(arr)) {
+      alert('数据格式不符合要求');
+      return;
+    }
+    saveRecords(normalizeRecords(arr));
+    if (window.MahjongApp && window.MahjongApp.list && window.MahjongApp.list.renderList) window.MahjongApp.list.renderList();
+    if (window.MahjongApp && window.MahjongApp.stats && window.MahjongApp.stats.renderStats) window.MahjongApp.stats.renderStats();
+    if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
+    alert('导入成功');
   }
 
   function importFromFile(file) {
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function () {
-      var text = reader.result;
-      if (typeof text !== 'string') return;
-      var arr;
-      try {
-        arr = JSON.parse(text);
-      } catch (e) {
-        alert('文件格式无效');
-        return;
-      }
-      if (!validateRecords(arr)) {
-        alert('数据格式不符合要求');
-        return;
-      }
-      saveRecords(normalizeRecords(arr));
-      if (window.MahjongApp && window.MahjongApp.list && window.MahjongApp.list.renderList) window.MahjongApp.list.renderList();
-      if (window.MahjongApp && window.MahjongApp.stats && window.MahjongApp.stats.renderStats) window.MahjongApp.stats.renderStats();
-      if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
-      alert('导入成功');
+      importFromJsonString(reader.result);
     };
     reader.readAsText(file, 'UTF-8');
   }
@@ -221,6 +257,8 @@
   function openTransferOverlay() {
     revokeLastExportUrl();
     hideExportLinkWrap();
+    hideImportPasteWrap();
+    isExporting = false;
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
       overlay.classList.add('is-open');
@@ -230,7 +268,7 @@
 
   function closeTransferOverlay() {
     hideExportLinkWrap();
-    if (lastExportUrl) setTimeout(revokeLastExportUrl, 1000);
+    if (lastExportUrl && !isExporting) setTimeout(revokeLastExportUrl, 1000);
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
       overlay.classList.remove('is-open');
@@ -281,6 +319,31 @@
         var f = inputImportFile.files && inputImportFile.files[0];
         if (f) importFromFile(f);
         inputImportFile.value = '';
+      });
+    }
+
+    var btnImportPaste = document.getElementById('btn-import-paste');
+    var inputImportPaste = document.getElementById('input-import-paste');
+    var btnImportPasteConfirm = document.getElementById('btn-import-paste-confirm');
+    if (btnImportPaste) {
+      btnImportPaste.addEventListener('click', function () {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then(function (t) {
+            if (t && t.trim()) {
+              importFromJsonString(t);
+            } else {
+              showImportPasteWrap();
+            }
+          }).catch(function () { showImportPasteWrap(); });
+        } else {
+          showImportPasteWrap();
+        }
+      });
+    }
+    if (btnImportPasteConfirm && inputImportPaste) {
+      btnImportPasteConfirm.addEventListener('click', function () {
+        importFromJsonString(inputImportPaste.value);
+        hideImportPasteWrap();
       });
     }
   }

@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" /></noscript>
-  <link rel="stylesheet" href="src/css/style.css?v=1.6.4.2" />
+  <link rel="stylesheet" href="src/css/style.css?v=1.6.4.3" />
 </head>
 <body>
   <div class="app">
@@ -135,6 +135,11 @@
             </div>
             <button type="button" id="btn-import-file" class="btn btn-outline btn-block">从文件导入</button>
             <input type="file" id="input-import-file" accept=".json,application/json" style="display:none" />
+            <button type="button" id="btn-import-paste" class="btn btn-outline btn-block">粘贴导入</button>
+            <div id="transfer-import-paste-wrap" class="transfer-import-paste-wrap" style="display:none">
+              <textarea id="input-import-paste" class="transfer-import-paste-textarea" placeholder="在此粘贴 JSON 数据后点击下方按钮" rows="4"></textarea>
+              <button type="button" id="btn-import-paste-confirm" class="btn btn-primary btn-block">确认导入</button>
+            </div>
             <button type="button" class="btn btn-outline btn-block close-transfer-btn">关闭</button>
           </div>
         </div>
@@ -144,17 +149,17 @@
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
-  <span class="app-version" aria-hidden="true">v1.6.4.2</span>
+  <span class="app-version" aria-hidden="true">v1.6.4.3</span>
   <!-- 农历与建除：solarlunar 用于展示，lunar-javascript 用于占卜宜忌（建除十二值日） -->
   <script src="assets/js/solarlunar.min.js" defer></script>
-  <script src="assets/js/lunar.min.js?v=1.6.4.2" defer></script>
-  <script src="src/js/data.js?v=1.6.4.2" defer></script>
-  <script src="src/js/stats.js?v=1.6.4.2" defer></script>
-  <script src="src/js/view.js?v=1.6.4.2" defer></script>
-  <script src="src/js/add.js?v=1.6.4.2" defer></script>
-  <script src="src/js/list.js?v=1.6.4.2" defer></script>
-  <script src="src/js/divine.js?v=1.6.4.2" defer></script>
-  <script src="src/js/transfer.js?v=1.6.4.2" defer></script>
-  <script src="src/js/app.js?v=1.6.4.2" defer></script>
+  <script src="assets/js/lunar.min.js?v=1.6.4.3" defer></script>
+  <script src="src/js/data.js?v=1.6.4.3" defer></script>
+  <script src="src/js/stats.js?v=1.6.4.3" defer></script>
+  <script src="src/js/view.js?v=1.6.4.3" defer></script>
+  <script src="src/js/add.js?v=1.6.4.3" defer></script>
+  <script src="src/js/list.js?v=1.6.4.3" defer></script>
+  <script src="src/js/divine.js?v=1.6.4.3" defer></script>
+  <script src="src/js/transfer.js?v=1.6.4.3" defer></script>
+  <script src="src/js/app.js?v=1.6.4.3" defer></script>
 </body>
 </html>
