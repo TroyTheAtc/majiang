@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.0") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.1") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.0") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.1") center / cover no-repeat;
   }
 
   .app::before {
@@ -739,6 +739,167 @@ body {
   box-shadow: 0 6px 16px rgba(139,0,0,0.35);
 }
 
+.btn-secondary {
+  margin-top: 0;
+  background: var(--tile-bg);
+  color: var(--red-main);
+  border: 1px solid var(--tile-border);
+  box-shadow: none;
+}
+.btn-outline {
+  margin-top: 0;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--tile-border);
+  box-shadow: none;
+}
+.btn-block {
+  width: 100%;
+  margin-top: 10px;
+}
+.btn-block:first-of-type { margin-top: 0; }
+
+/* ========== 导入/导出（数据） ========== */
+.view-stats.active {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.view-stats.active .stats-total {
+  flex-shrink: 0;
+}
+.view-stats.active .stats-by {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.stats-transfer-btn {
+  display: block;
+  width: 100%;
+  margin-top: auto;
+  flex-shrink: 0;
+  min-height: var(--tap-min);
+  padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0));
+  font-size: 0.95rem;
+  color: #5c4a20;
+  text-align: center;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  background: linear-gradient(180deg, #faf4e0 0%, #f5e9c8 50%, #ebe0b0 100%);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px rgba(201, 162, 39, 0.2);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.stats-transfer-btn:hover,
+.stats-transfer-btn:focus-visible {
+  background: linear-gradient(180deg, #f5e9c8 0%, #ebe0b0 50%, #e2d69a 100%);
+  border-color: rgba(212, 175, 55, 0.55);
+  box-shadow: 0 2px 10px rgba(201, 162, 39, 0.28);
+}
+.stats-transfer-btn:active {
+  opacity: 0.95;
+}
+.transfer-overlay-panel {
+  padding: 20px;
+  width: 100%;
+  max-width: 340px;
+}
+.transfer-desc {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.transfer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.45);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.transfer-overlay.is-open {
+  display: flex;
+}
+.transfer-overlay .transfer-inner-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  background: rgba(0, 0, 0, 0.45);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.transfer-overlay .transfer-inner-overlay.is-open {
+  display: flex;
+}
+.transfer-modal {
+  width: 100%;
+  max-width: 340px;
+  padding: 20px;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius-tile);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.transfer-modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 16px;
+}
+#transfer-qr-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  margin-bottom: 12px;
+}
+#transfer-qr-container canvas,
+#transfer-qr-container img {
+  display: block;
+}
+.transfer-qr-too-large {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 12px 0;
+}
+.transfer-modal-close,
+.transfer-scan-close {
+  margin-top: 12px;
+}
+.transfer-scan-area {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto 12px;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 1;
+}
+.transfer-scan-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.transfer-scan-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0 0 10px;
+}
+
 /* ========== 统计 ========== */
 .card-tile {
   background: var(--tile-bg);
@@ -751,6 +912,12 @@ body {
   padding: 14px 20px 16px;
   text-align: center;
   margin-bottom: 16px;
+}
+.stats-total-clickable {
+  cursor: pointer;
+}
+.stats-total-clickable .btn-eye {
+  cursor: pointer;
 }
 
 .stats-total-label {

@@ -7,17 +7,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>老婆的麻将日记</title>
-  <link rel="preload" href="assets/images/background.jpg?v=1.6.0" as="image" />
-  <link rel="preload" href="assets/images/yishou.png?v=1.6.0" as="image" />
-  <link rel="preload" href="assets/images/ping.png?v=1.6.0" as="image" />
-  <link rel="preload" href="assets/images/ji.png?v=1.6.0" as="image" />
-  <link rel="preload" href="assets/images/daji.png?v=1.6.0" as="image" />
+  <!-- 仅预加载首屏关键脚本；大图与占卜等级图不 preload，按需加载 -->
   <link rel="preload" href="assets/js/solarlunar.min.js" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" /></noscript>
-  <link rel="stylesheet" href="src/css/style.css?v=1.6.0" />
+  <link rel="stylesheet" href="src/css/style.css?v=1.6.1" />
 </head>
 <body>
   <div class="app">
@@ -91,7 +87,7 @@
 
       <!-- 统计视图 -->
       <section id="view-stats" class="view view-stats">
-        <div class="stats-total card-tile">
+        <div id="stats-total-card" class="stats-total card-tile stats-total-clickable">
           <span class="stats-total-label">总战绩</span>
           <div class="stats-total-row">
             <button type="button" class="btn-eye btn-eye-stats" aria-label="隐藏金额"><img src="assets/images/yanjing.png" alt="" /></button>
@@ -111,6 +107,7 @@
           </div>
           <ul id="stats-category-list"></ul>
         </div>
+        <button type="button" id="btn-open-transfer" class="stats-transfer-btn">数据导入/导出</button>
         <!-- 点击某一项后弹出的详情小卡片 -->
         <div id="stats-detail-overlay" class="stats-detail-overlay" aria-hidden="true">
           <div class="stats-detail-card card-tile">
@@ -129,22 +126,61 @@
             </dl>
           </div>
         </div>
+        <!-- 数据导入/导出弹层（从「数据导入/导出」按钮打开） -->
+        <div id="transfer-overlay" class="transfer-overlay" aria-hidden="true">
+          <div class="transfer-overlay-panel card-tile">
+            <p class="transfer-desc">通过二维码或文件备份、恢复或传给对方</p>
+            <button type="button" id="btn-export-qr" class="btn btn-primary btn-block">生成二维码（导出）</button>
+            <button type="button" id="btn-import-scan" class="btn btn-secondary btn-block">扫码导入</button>
+            <button type="button" id="btn-export-file" class="btn btn-outline btn-block">导出为文件</button>
+            <button type="button" id="btn-import-file" class="btn btn-outline btn-block">从文件导入</button>
+            <input type="file" id="input-import-file" accept=".json,application/json" style="display:none" />
+            <button type="button" class="btn btn-outline btn-block close-transfer-btn">关闭</button>
+          </div>
+          <!-- 导出二维码子弹层 -->
+          <div id="transfer-qr-overlay" class="transfer-overlay transfer-inner-overlay" aria-hidden="true">
+            <div class="transfer-modal card-tile">
+              <div class="transfer-modal-title">对方扫码即可导入</div>
+              <div id="transfer-qr-container"></div>
+              <p id="transfer-qr-too-large" class="transfer-qr-too-large" style="display:none">数据量较大，无法生成二维码，请使用「导出为文件」</p>
+              <button type="button" class="btn btn-outline btn-block transfer-modal-close">关闭</button>
+            </div>
+          </div>
+          <!-- 扫码导入子弹层 -->
+          <div id="transfer-scan-overlay" class="transfer-overlay transfer-inner-overlay" aria-hidden="true">
+            <div class="transfer-modal card-tile">
+              <div class="transfer-modal-title">扫描对方二维码</div>
+              <div class="transfer-scan-area">
+                <video id="transfer-scan-video" class="transfer-scan-video" muted playsinline></video>
+                <canvas id="transfer-scan-canvas" style="display:none"></canvas>
+              </div>
+              <p class="transfer-scan-hint">或将二维码截图后选择下方「选择图片」</p>
+              <button type="button" id="btn-scan-choose-image" class="btn btn-outline btn-block">选择图片</button>
+              <input type="file" id="input-scan-image" accept="image/*" style="display:none" />
+              <button type="button" class="btn btn-outline btn-block transfer-scan-close">取消</button>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
-  <span class="app-version" aria-hidden="true">v1.6.0</span>
+  <span class="app-version" aria-hidden="true">v1.6.1</span>
   <!-- 农历与建除：solarlunar 用于展示，lunar-javascript 用于占卜宜忌（建除十二值日） -->
   <script src="assets/js/solarlunar.min.js" defer></script>
-  <script src="assets/js/lunar.min.js?v=1.6.0" defer></script>
-  <script src="src/js/data.js?v=1.6.0" defer></script>
-  <script src="src/js/stats.js?v=1.6.0" defer></script>
-  <script src="src/js/view.js?v=1.6.0" defer></script>
-  <script src="src/js/add.js?v=1.6.0" defer></script>
-  <script src="src/js/list.js?v=1.6.0" defer></script>
-  <script src="src/js/divine.js?v=1.6.0" defer></script>
-  <script src="src/js/app.js?v=1.6.0" defer></script>
+  <script src="assets/js/lunar.min.js?v=1.6.1" defer></script>
+  <script src="assets/js/lz-string.min.js" defer></script>
+  <script src="assets/js/qrcode.min.js" defer></script>
+  <script src="assets/js/jsQR.min.js" defer></script>
+  <script src="src/js/data.js?v=1.6.1" defer></script>
+  <script src="src/js/stats.js?v=1.6.1" defer></script>
+  <script src="src/js/view.js?v=1.6.1" defer></script>
+  <script src="src/js/add.js?v=1.6.1" defer></script>
+  <script src="src/js/list.js?v=1.6.1" defer></script>
+  <script src="src/js/divine.js?v=1.6.1" defer></script>
+  <script src="src/js/transfer.js?v=1.6.1" defer></script>
+  <script src="src/js/app.js?v=1.6.1" defer></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 # 老婆的麻将日记 — GitHub Pages 公网部署指南
 
-当前版本：**1.6.0**（H5 稳定版，鸿蒙端开发以此版本为基线）
+当前版本：**1.6.1**（H5 稳定版，鸿蒙端开发以此版本为基线）
 
 按下面步骤操作，即可获得一个免费公网地址（如 `https://TroyTheAtc.github.io/majiang/`），手机随时打开使用。
 
@@ -14,8 +14,9 @@
 |----------|------|
 | `index.html` | 页面入口 |
 | `src/css/style.css` | 样式 |
-| `src/js/data.js`、`stats.js`、`view.js`、`add.js`、`list.js`、`divine.js`、`app.js` | 逻辑与数据（按模块拆分，需全部上传） |
-| `assets/images/` | 图片资源：背景图 `background.jpg`，以及 `bianji.png`、`shanchu.png`、`yanjing.png`、`eye-close.png`、`backimage.png` 等 |
+| `src/js/data.js`、`stats.js`、`view.js`、`add.js`、`list.js`、`divine.js`、`transfer.js`、`app.js` | 逻辑与数据（按模块拆分，需全部上传） |
+| `assets/js/` | 脚本：`solarlunar.min.js`、`lunar.min.js`、`lz-string.min.js`、`qrcode.min.js`、`jsQR.min.js` 等 |
+| `assets/images/` | 图片资源：背景图 `background.jpg`，以及 `bianji.png`、`shanchu.png`、`yanjing.png`、`eye-close.png`、等级图、箭头图等 |
 
 其它文件（如 `docs/`、`README.md` 等）可一并提交，不影响网页运行。
 
@@ -90,7 +91,7 @@ cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git com
 
 若想写具体更新说明，把 `-m "更新"` 改成例如 `-m "优化背景图加载"` 即可。推送完成后，GitHub Pages 会自动重新部署。
 
-**让手机端马上看到新版本**：推送后若手机仍显示旧版，是浏览器缓存。在项目里全局搜索 `?v=1.6.0` 全部替换为 `?v=1.6.1`，再执行上面命令推送一次，手机刷新后就会拉新文件。
+**让手机端马上看到新版本**：推送后若手机仍显示旧版，是浏览器缓存。在项目里全局搜索 `?v=1.6.1` 全部替换为 `?v=1.6.2`，再执行上面命令推送一次，手机刷新后就会拉新文件。
 
 ---
 

@@ -39,9 +39,9 @@
     });
   });
 
-  document.querySelectorAll('.stats-type-btn').forEach(function (btn) {
+  document.querySelectorAll('.stats-type-btn[data-type]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.querySelectorAll('.stats-type-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.stats-type-btn[data-type]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       renderStats();
     });

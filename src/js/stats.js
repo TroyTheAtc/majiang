@@ -9,8 +9,9 @@
   var data = window.MahjongApp && window.MahjongApp.data;
   if (!data) return;
 
-  /** 根据当前统计类型 + 选项 key 筛选记录 */
+  /** 根据当前统计类型 + 选项 key 筛选记录；statsType 为 'all' 时返回全部 */
   function getRecordsForStat(records, statsType, key) {
+    if (statsType === 'all') return records;
     if (statsType === 'category') {
       return records.filter(function (r) { return r.category === key; });
     }
@@ -195,7 +196,7 @@
     }
 
     if (streakWrap && streakEl) {
-      if (statsType === 'year') {
+      if (statsType === 'year' || statsType === 'all') {
         streakWrap.setAttribute('aria-hidden', 'true');
         streakEl.textContent = '';
         streakEl.className = 'stats-detail-streak';
@@ -272,14 +273,17 @@
         if (byYear[y] === undefined) byYear[y] = 0;
         byYear[y] += (r.amount || 0);
       });
+      var currentYear = String(new Date().getFullYear());
       Object.keys(byYear).sort(function (a, b) { return b.localeCompare(a); }).forEach(function (y) {
         var subset = getRecordsForStat(records, 'year', y);
-        var streak = getRecentStreak(subset);
         var streakText = '';
         var streakClass = '';
-        if (streak && streak.count >= 2) {
-          streakText = streak.type === 'win' ? streak.count + '连胜' : streak.count + '连败';
-          streakClass = streak.type === 'win' ? 'streak-win' : 'streak-loss';
+        if (y === currentYear) {
+          var streak = getRecentStreak(subset);
+          if (streak && streak.count >= 2) {
+            streakText = streak.type === 'win' ? streak.count + '连胜' : streak.count + '连败';
+            streakClass = streak.type === 'win' ? 'streak-win' : 'streak-loss';
+          }
         }
         items.push({ name: y + '年', sum: byYear[y], key: y, streakText: streakText, streakClass: streakClass });
       });
@@ -325,6 +329,16 @@
     });
   }
 
+  function bindStatsTotalClick() {
+    var totalCard = document.getElementById('stats-total-card');
+    if (!totalCard || totalCard._statsTotalBound) return;
+    totalCard._statsTotalBound = true;
+    totalCard.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.btn-eye')) return;
+      showDetailCard('总战绩', 'all', '');
+    });
+  }
+
   window.MahjongApp = window.MahjongApp || {};
   window.MahjongApp.stats = { renderStats: renderStats, closeDetailCard: closeDetailCard };
 
@@ -332,9 +346,11 @@
     document.addEventListener('DOMContentLoaded', function () {
       bindDetailClose();
       bindStatsDetail();
+      bindStatsTotalClick();
     });
   } else {
     bindDetailClose();
     bindStatsDetail();
+    bindStatsTotalClick();
   }
 })();

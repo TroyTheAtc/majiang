@@ -17,10 +17,6 @@
     }
     if (viewId === 'divine' && window.MahjongApp && window.MahjongApp.divine) {
       var dateStr = new Date().toISOString().slice(0, 10);
-      try {
-        var last = localStorage.getItem('divine_last_date') || '';
-        if (last) dateStr = last;
-      } catch (e) {}
       window.MahjongApp.divine.renderDivine(dateStr);
     }
   }
