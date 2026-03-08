@@ -229,7 +229,7 @@
   function renderStats() {
     const records = data.getRecords();
     const statsType = document.querySelector('.stats-type-btn.active')?.getAttribute('data-type') || 'category';
-    const CATEGORIES = data.CATEGORIES;
+    const CATEGORIES = data.getCategories ? data.getCategories() : [];
     const formatAmount = data.formatAmount;
     const getHideAmounts = data.getHideAmounts;
     const escapeHtml = data.escapeHtml;

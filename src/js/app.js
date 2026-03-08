@@ -18,7 +18,7 @@
   var setHideAmounts = data.setHideAmounts;
   var addRecord = data.addRecord;
   var updateRecord = data.updateRecord;
-  var CATEGORIES = data.CATEGORIES;
+  var getCategories = data.getCategories;
   var renderList = list.renderList;
   var renderStats = stats ? stats.renderStats : function () {};
   var initForm = add.initForm;
@@ -37,6 +37,8 @@
       el.classList.remove('show-delete');
       el._longPressShown = false;
     });
+    if (e.target.closest('#category-options')) return;
+    if (add.clearCategoryShowDelete) add.clearCategoryShowDelete();
   });
 
   document.querySelectorAll('.stats-type-btn[data-type]').forEach(function (btn) {
@@ -73,7 +75,7 @@
     if (winloss === 'loss') amount = -amount;
     var formData = {
       date: form.date.value,
-      category: (form.querySelector('[name="category"]:checked') || {}).value || CATEGORIES[0],
+      category: (form.querySelector('[name="category"]:checked') || {}).value || (getCategories()[0] || ''),
       location: form.location.value,
       amount: amount
     };

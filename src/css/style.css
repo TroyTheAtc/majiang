@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.1") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.2") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.1") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.2") center / cover no-repeat;
   }
 
   .app::before {
@@ -706,6 +706,62 @@ body {
 
 .chip-win:has(input:checked) { background: var(--win); border-color: var(--win); }
 .chip-loss:has(input:checked) { background: var(--loss); border-color: var(--loss); }
+
+/* 搓一把页·对象子标签：长按显示删除、末尾添加按钮 */
+.category-chip {
+  position: relative;
+  justify-content: center;
+}
+.category-chip .category-chip-text {
+  transform: translateY(6px);
+}
+.category-chip.show-delete {
+  padding-right: 40px;
+  justify-content: flex-start;
+}
+.category-chip .category-chip-delete {
+  display: none;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.category-chip .category-chip-delete img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.category-chip.show-delete .category-chip-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.category-chip.shake {
+  animation: record-shake 0.35s ease-out;
+}
+.category-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.category-add-btn img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  opacity: 0.85;
+}
 
 .btn {
   display: flex;

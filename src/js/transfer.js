@@ -19,7 +19,7 @@
 
   function validateRecords(arr) {
     if (!Array.isArray(arr)) return false;
-    var cats = data.CATEGORIES || [];
+    var cats = (data.getCategories && data.getCategories()) || [];
     for (var i = 0; i < arr.length; i++) {
       var r = arr[i];
       if (r == null || typeof r !== 'object') return false;

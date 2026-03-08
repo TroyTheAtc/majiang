@@ -7,7 +7,45 @@
 
   const STORAGE_KEY = 'mahjong_records';
   const HIDE_AMOUNTS_KEY = 'mahjong_hide_amounts';
-  const CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
+  const CATEGORIES_KEY = 'mahjong_categories';
+  const DEFAULT_CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
+
+  function getCategories() {
+    try {
+      var raw = localStorage.getItem(CATEGORIES_KEY);
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length > 0) return arr;
+      }
+    } catch (e) {}
+    return DEFAULT_CATEGORIES.slice();
+  }
+
+  function saveCategories(arr) {
+    try {
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(arr));
+    } catch (e) {}
+  }
+
+  function addCategory(name) {
+    var s = (name || '').trim();
+    if (!s) return false;
+    var cats = getCategories();
+    if (cats.indexOf(s) !== -1) return false;
+    cats.push(s);
+    saveCategories(cats);
+    return true;
+  }
+
+  function removeCategory(name) {
+    var cats = getCategories();
+    if (cats.length <= 1) return false;
+    var idx = cats.indexOf(name);
+    if (idx === -1) return false;
+    cats.splice(idx, 1);
+    saveCategories(cats);
+    return true;
+  }
 
   function getHideAmounts() {
     return localStorage.getItem(HIDE_AMOUNTS_KEY) === '1';
@@ -88,7 +126,11 @@
   window.MahjongApp.data = {
     STORAGE_KEY: STORAGE_KEY,
     HIDE_AMOUNTS_KEY: HIDE_AMOUNTS_KEY,
-    CATEGORIES: CATEGORIES,
+    CATEGORIES_KEY: CATEGORIES_KEY,
+    getCategories: getCategories,
+    saveCategories: saveCategories,
+    addCategory: addCategory,
+    removeCategory: removeCategory,
     getHideAmounts: getHideAmounts,
     setHideAmounts: setHideAmounts,
     getRecords: getRecords,
