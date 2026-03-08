@@ -42,11 +42,14 @@
   function exportToFile() {
     var records = getRecords();
     var blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+    var now = new Date();
+    var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    var filename = 'mahjong-records-' + dateStr + '.json';
     var a = document.createElement('a');
+    a.download = filename;
     a.href = URL.createObjectURL(blob);
-    a.download = 'mahjong-records.json';
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
   }
 
   function importFromFile(file) {
