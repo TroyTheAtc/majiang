@@ -135,6 +135,8 @@
         URL.revokeObjectURL(url);
         lastExportUrl = '';
         isExporting = false;
+        closeTransferOverlay();
+        if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
       }).catch(function () {
         setTimeout(function () {
           isExporting = false;
@@ -170,12 +172,18 @@
         isExporting = false;
         revokeLastExportUrl();
       }, 60000);
+      setTimeout(function () {
+        closeTransferOverlay();
+        if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
+      }, 2000);
     } else {
       attemptDownload(url, filename);
       setTimeout(function () {
         URL.revokeObjectURL(url);
         lastExportUrl = '';
         isExporting = false;
+        closeTransferOverlay();
+        if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
       }, 2000);
     }
   }

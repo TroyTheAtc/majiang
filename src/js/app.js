@@ -37,7 +37,7 @@
       el.classList.remove('show-delete');
       el._longPressShown = false;
     });
-    if (e.target.closest('#category-options')) return;
+    if (e.target.closest('.category-chip') || e.target.closest('.category-add-btn')) return;
     if (add.clearCategoryShowDelete) add.clearCategoryShowDelete();
   });
 

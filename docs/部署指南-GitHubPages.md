@@ -103,6 +103,7 @@ cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git com
 
 - **页面打开是 404**：确认 Settings → Pages 里 Source 已选 "Deploy from a branch"，分支为 main，目录为 / (root)。
 - **样式/图片不显示**：确认 `index.html`、`src/css/style.css`、`src/js/` 下全部 JS 文件及 `assets/images/` 下所需图片都已提交并推送。
+- **push 失败：Failed to connect to github.com port 443**：本地已提交成功，只是推不上去。国内连 GitHub 常超时，可过一会儿再执行一次 `git push`（或整条更新命令）；换网络、开代理/VPN 后再试也往往能成功。
 - **国内访问慢或打不开**：GitHub 服务器在海外，国内网络可能较慢或偶发无法访问，可多试几次或换网络；若长期需国内访问可考虑腾讯云等方案。
 - **数据会丢吗**：不会。数据存在浏览器 localStorage 里，和访问的网址绑定；只要用同一个链接、同一台设备，数据会保留。
 
