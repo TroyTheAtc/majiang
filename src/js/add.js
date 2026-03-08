@@ -20,6 +20,7 @@
   var catActiveChip = null;
   var catLongPressTriggered = false;
   var catMoved = false;
+  var catTouchOnAddBtn = false;
 
   function fillForm(record) {
     var form = document.getElementById('form-add');
@@ -90,6 +91,13 @@
   }
 
   function catOnTouchStart(e) {
+    catTouchOnAddBtn = false;
+    var onAddBtn = e.target && e.target.closest && e.target.closest('.category-add-btn');
+    if (onAddBtn) {
+      catTouchOnAddBtn = true;
+      catMoved = false;
+      return;
+    }
     var chip = e.target.closest('.category-chip');
     if (!chip) return;
     catActiveChip = chip;
@@ -133,15 +141,14 @@
   }
 
   function catOnTouchEnd(e) {
-    if (!catActiveChip) {
-      var addBtn = e.target && e.target.closest && e.target.closest('.category-add-btn');
-      if (addBtn) {
-        e.preventDefault();
-        doAddPrompt();
-        catClearTimer();
-        return;
-      }
+    if (catTouchOnAddBtn && !catMoved) {
+      e.preventDefault();
+      doAddPrompt();
+      catTouchOnAddBtn = false;
+      catClearTimer();
+      return;
     }
+    catTouchOnAddBtn = false;
     catClearTimer();
     catActiveChip = null;
   }
