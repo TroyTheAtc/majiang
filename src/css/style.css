@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.2") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.3") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.2") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.3") center / cover no-repeat;
   }
 
   .app::before {
@@ -889,78 +889,6 @@ body {
 }
 .transfer-overlay.is-open {
   display: flex;
-}
-.transfer-overlay .transfer-inner-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: none;
-  background: rgba(0, 0, 0, 0.45);
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  box-sizing: border-box;
-}
-.transfer-overlay .transfer-inner-overlay.is-open {
-  display: flex;
-}
-.transfer-modal {
-  width: 100%;
-  max-width: 340px;
-  padding: 20px;
-  background: var(--tile-bg);
-  border: 1px solid var(--tile-border);
-  border-radius: var(--radius-tile);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-.transfer-modal-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-  text-align: center;
-  margin-bottom: 16px;
-}
-#transfer-qr-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 220px;
-  margin-bottom: 12px;
-}
-#transfer-qr-container canvas,
-#transfer-qr-container img {
-  display: block;
-}
-.transfer-qr-too-large {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  text-align: center;
-  margin: 12px 0;
-}
-.transfer-modal-close,
-.transfer-scan-close {
-  margin-top: 12px;
-}
-.transfer-scan-area {
-  width: 100%;
-  max-width: 280px;
-  margin: 0 auto 12px;
-  background: #000;
-  border-radius: var(--radius);
-  overflow: hidden;
-  aspect-ratio: 1;
-}
-.transfer-scan-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.transfer-scan-hint {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  text-align: center;
-  margin: 0 0 10px;
 }
 
 /* ========== 统计 ========== */

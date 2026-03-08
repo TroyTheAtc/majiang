@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" /></noscript>
-  <link rel="stylesheet" href="src/css/style.css?v=1.6.2" />
+  <link rel="stylesheet" href="src/css/style.css?v=1.6.3" />
 </head>
 <body>
   <div class="app">
@@ -125,36 +125,11 @@
         <!-- 数据导入/导出弹层（从「数据导入/导出」按钮打开） -->
         <div id="transfer-overlay" class="transfer-overlay" aria-hidden="true">
           <div class="transfer-overlay-panel card-tile">
-            <p class="transfer-desc">通过二维码或文件备份、恢复或传给对方</p>
-            <button type="button" id="btn-export-qr" class="btn btn-primary btn-block">生成二维码（导出）</button>
-            <button type="button" id="btn-import-scan" class="btn btn-secondary btn-block">扫码导入</button>
-            <button type="button" id="btn-export-file" class="btn btn-outline btn-block">导出为文件</button>
+            <p class="transfer-desc">通过 JSON 文件备份、恢复或传给对方</p>
+            <button type="button" id="btn-export-file" class="btn btn-primary btn-block">导出为文件</button>
             <button type="button" id="btn-import-file" class="btn btn-outline btn-block">从文件导入</button>
             <input type="file" id="input-import-file" accept=".json,application/json" style="display:none" />
             <button type="button" class="btn btn-outline btn-block close-transfer-btn">关闭</button>
-          </div>
-          <!-- 导出二维码子弹层 -->
-          <div id="transfer-qr-overlay" class="transfer-overlay transfer-inner-overlay" aria-hidden="true">
-            <div class="transfer-modal card-tile">
-              <div class="transfer-modal-title">对方扫码即可导入</div>
-              <div id="transfer-qr-container"></div>
-              <p id="transfer-qr-too-large" class="transfer-qr-too-large" style="display:none">数据量较大，无法生成二维码，请使用「导出为文件」</p>
-              <button type="button" class="btn btn-outline btn-block transfer-modal-close">关闭</button>
-            </div>
-          </div>
-          <!-- 扫码导入子弹层 -->
-          <div id="transfer-scan-overlay" class="transfer-overlay transfer-inner-overlay" aria-hidden="true">
-            <div class="transfer-modal card-tile">
-              <div class="transfer-modal-title">扫描对方二维码</div>
-              <div class="transfer-scan-area">
-                <video id="transfer-scan-video" class="transfer-scan-video" muted playsinline></video>
-                <canvas id="transfer-scan-canvas" style="display:none"></canvas>
-              </div>
-              <p class="transfer-scan-hint">或将二维码截图后选择下方「选择图片」</p>
-              <button type="button" id="btn-scan-choose-image" class="btn btn-outline btn-block">选择图片</button>
-              <input type="file" id="input-scan-image" accept="image/*" style="display:none" />
-              <button type="button" class="btn btn-outline btn-block transfer-scan-close">取消</button>
-            </div>
           </div>
         </div>
       </section>
@@ -163,20 +138,17 @@
     <!-- 底部安全区占位 -->
     <div class="safe-bottom"></div>
   </div>
-  <span class="app-version" aria-hidden="true">v1.6.2</span>
+  <span class="app-version" aria-hidden="true">v1.6.3</span>
   <!-- 农历与建除：solarlunar 用于展示，lunar-javascript 用于占卜宜忌（建除十二值日） -->
   <script src="assets/js/solarlunar.min.js" defer></script>
-  <script src="assets/js/lunar.min.js?v=1.6.2" defer></script>
-  <script src="assets/js/lz-string.min.js" defer></script>
-  <script src="assets/js/qrcode.min.js" defer></script>
-  <script src="assets/js/jsQR.min.js" defer></script>
-  <script src="src/js/data.js?v=1.6.2" defer></script>
-  <script src="src/js/stats.js?v=1.6.2" defer></script>
-  <script src="src/js/view.js?v=1.6.2" defer></script>
-  <script src="src/js/add.js?v=1.6.2" defer></script>
-  <script src="src/js/list.js?v=1.6.2" defer></script>
-  <script src="src/js/divine.js?v=1.6.2" defer></script>
-  <script src="src/js/transfer.js?v=1.6.2" defer></script>
-  <script src="src/js/app.js?v=1.6.2" defer></script>
+  <script src="assets/js/lunar.min.js?v=1.6.3" defer></script>
+  <script src="src/js/data.js?v=1.6.3" defer></script>
+  <script src="src/js/stats.js?v=1.6.3" defer></script>
+  <script src="src/js/view.js?v=1.6.3" defer></script>
+  <script src="src/js/add.js?v=1.6.3" defer></script>
+  <script src="src/js/list.js?v=1.6.3" defer></script>
+  <script src="src/js/divine.js?v=1.6.3" defer></script>
+  <script src="src/js/transfer.js?v=1.6.3" defer></script>
+  <script src="src/js/app.js?v=1.6.3" defer></script>
 </body>
 </html>
