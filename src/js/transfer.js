@@ -39,17 +39,33 @@
     });
   }
 
+  function isMobile() {
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+  }
+
   function exportToFile() {
     var records = getRecords();
-    var blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+    var jsonStr = JSON.stringify(records, null, 2);
     var now = new Date();
     var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     var filename = 'mahjong-records-' + dateStr + '.json';
     var a = document.createElement('a');
     a.download = filename;
-    a.href = URL.createObjectURL(blob);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    if (isMobile()) {
+      a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      var blob = new Blob([jsonStr], { type: 'application/json' });
+      a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      }, 2000);
+    }
   }
 
   function importFromFile(file) {
