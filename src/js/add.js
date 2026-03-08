@@ -113,8 +113,35 @@
     catClearTimer();
   }
 
-  function catOnTouchEnd() {
-    if (!catActiveChip) return;
+  function doAddPrompt() {
+    var name = prompt('输入新对象名称', '');
+    if (name != null && (name = name.trim())) {
+      if (addCategory(name)) {
+        renderCategoryOptions();
+        var form = document.getElementById('form-add');
+        if (form) {
+          var radio = form.querySelector('[name="category"][value="' + escapeHtml(name) + '"]');
+          if (radio) radio.checked = true;
+        }
+        if (window.MahjongApp && window.MahjongApp.stats && window.MahjongApp.stats.renderStats) {
+          window.MahjongApp.stats.renderStats();
+        }
+      } else {
+        alert('该对象已存在');
+      }
+    }
+  }
+
+  function catOnTouchEnd(e) {
+    if (!catActiveChip) {
+      var addBtn = e.target && e.target.closest && e.target.closest('.category-add-btn');
+      if (addBtn) {
+        e.preventDefault();
+        doAddPrompt();
+        catClearTimer();
+        return;
+      }
+    }
     catClearTimer();
     catActiveChip = null;
   }
@@ -169,22 +196,7 @@
     var addBtn = e.target.closest('.category-add-btn');
     if (addBtn) {
       e.preventDefault();
-      var name = prompt('输入新对象名称', '');
-      if (name != null && (name = name.trim())) {
-        if (addCategory(name)) {
-          renderCategoryOptions();
-          var form = document.getElementById('form-add');
-          if (form) {
-            var radio = form.querySelector('[name="category"][value="' + escapeHtml(name) + '"]');
-            if (radio) radio.checked = true;
-          }
-          if (window.MahjongApp && window.MahjongApp.stats && window.MahjongApp.stats.renderStats) {
-            window.MahjongApp.stats.renderStats();
-          }
-        } else {
-          alert('该对象已存在');
-        }
-      }
+      doAddPrompt();
       return;
     }
     var chip = e.target.closest('.category-chip');
@@ -199,7 +211,7 @@
     if (!categoryOptionsEl) return;
     categoryOptionsEl.addEventListener('touchstart', catOnTouchStart, { passive: true });
     categoryOptionsEl.addEventListener('touchmove', catOnTouchMove, { passive: true });
-    categoryOptionsEl.addEventListener('touchend', catOnTouchEnd, { passive: true });
+    categoryOptionsEl.addEventListener('touchend', catOnTouchEnd, { passive: false });
     categoryOptionsEl.addEventListener('touchcancel', catOnTouchEnd, { passive: true });
     categoryOptionsEl.addEventListener('mousedown', catOnMouseDown);
     categoryOptionsEl.addEventListener('mousemove', catOnMouseMove);
