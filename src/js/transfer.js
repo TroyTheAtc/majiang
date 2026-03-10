@@ -1,5 +1,5 @@
 /**
- * 导入/导出：JSON 文件导出与导入（含鸿蒙 / iOS 适配）
+ * 导入/导出：仅复制 JSON 导出、粘贴导入
  */
 (function () {
   'use strict';
@@ -40,25 +40,6 @@
   }
 
   var lastExportJson = '';
-  var lastExportUrl = '';
-  var isExporting = false;
-
-  function isMobile() {
-    return ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
-  }
-
-  function isWechat() {
-    return /MicroMessenger/i.test(navigator.userAgent);
-  }
-
-  function isHarmonyOS() {
-    return /HarmonyOS|HMOS|OpenHarmony/i.test(navigator.userAgent);
-  }
-
-  function isIOS() {
-    if (isHarmonyOS()) return false;
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  }
 
   function hideExportLinkWrap() {
     var wrap = document.getElementById('transfer-export-link-wrap');
@@ -79,40 +60,13 @@
     if (ta) { ta.value = ''; ta.focus(); }
   }
 
-  function revokeLastExportUrl() {
-    if (lastExportUrl) {
-      try { URL.revokeObjectURL(lastExportUrl); } catch (e) {}
-      lastExportUrl = '';
-    }
-  }
-
-  function attemptDownload(url, filename) {
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    try {
-      if (typeof MouseEvent === 'function') {
-        a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-      } else {
-        a.click();
-      }
-    } catch (e) {
-      a.click();
-    }
-    setTimeout(function () {
-      if (a.parentNode) document.body.removeChild(a);
-    }, 2000);
-  }
-
   function showCopyOnly(message) {
     var wrap = document.getElementById('transfer-export-link-wrap');
     var hint = wrap ? wrap.querySelector('.transfer-export-hint') : null;
     var link = document.getElementById('transfer-export-link');
     var copyBtn = document.getElementById('btn-export-copy');
     if (wrap) wrap.style.display = 'block';
-    if (hint) hint.textContent = message;
+    if (hint) hint.textContent = message || '请点击下方按钮复制 JSON 数据';
     if (link) link.style.display = 'none';
     if (copyBtn) {
       copyBtn.style.display = 'block';
@@ -121,111 +75,11 @@
     }
   }
 
-  function trySystemShare(url, jsonStr, filename) {
-    if (!navigator.share) return false;
-    try {
-      var file = new File([jsonStr], filename, { type: 'application/json' });
-      if (!navigator.canShare || !navigator.canShare({ files: [file] })) return false;
-      navigator.share({
-        files: [file],
-        title: '麻将日记备份',
-        text: '我的麻将记录备份'
-      }).then(function () {
-        alert('已分享');
-        URL.revokeObjectURL(url);
-        lastExportUrl = '';
-        isExporting = false;
-        closeTransferOverlay();
-        if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
-      }).catch(function () {
-        setTimeout(function () {
-          isExporting = false;
-          revokeLastExportUrl();
-        }, 60000);
-      });
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function doExportFallback(url, filename, hintText) {
-    if (isMobile()) {
-      var wrap = document.getElementById('transfer-export-link-wrap');
-      var hint = wrap ? wrap.querySelector('.transfer-export-hint') : null;
-      var link = document.getElementById('transfer-export-link');
-      var copyBtn = document.getElementById('btn-export-copy');
-      if (wrap) wrap.style.display = 'block';
-      if (hint) hint.textContent = hintText || '正在尝试下载，若未成功请使用：';
-      if (copyBtn) {
-        copyBtn.style.display = 'block';
-        copyBtn.textContent = '复制 JSON 文本（粘贴到备忘录保存）';
-      }
-      if (link) {
-        link.href = url;
-        link.download = filename;
-        link.textContent = '点击下载 ' + filename;
-        link.style.display = '';
-      }
-      setTimeout(function () { attemptDownload(url, filename); }, 300);
-      setTimeout(function () {
-        isExporting = false;
-        revokeLastExportUrl();
-      }, 60000);
-      setTimeout(function () {
-        closeTransferOverlay();
-        if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
-      }, 2000);
-    } else {
-      attemptDownload(url, filename);
-      setTimeout(function () {
-        URL.revokeObjectURL(url);
-        lastExportUrl = '';
-        isExporting = false;
-        closeTransferOverlay();
-        if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
-      }, 2000);
-    }
-  }
-
-  function exportToFile() {
+  function exportCopyOnly() {
     var records = getRecords();
     var jsonStr = JSON.stringify(records, null, 2);
-    var dateStr = new Date().toISOString().slice(0, 10);
-    var filename = 'mahjong-records-' + dateStr + '.json';
     lastExportJson = jsonStr;
-    isExporting = true;
-    revokeLastExportUrl();
-
-    var blob = new Blob([jsonStr], { type: 'application/octet-stream' });
-    var url = URL.createObjectURL(blob);
-    lastExportUrl = url;
-
-    setTimeout(function () { isExporting = false; }, 60000);
-
-    if (isWechat()) {
-      showCopyOnly('微信内限制自动下载，请复制文本后粘贴保存');
-      URL.revokeObjectURL(url);
-      lastExportUrl = '';
-      isExporting = false;
-      return;
-    }
-
-    if (isIOS()) {
-      showCopyOnly('iOS 设备请使用「复制」或「分享」功能');
-      trySystemShare(url, jsonStr, filename);
-      return;
-    }
-
-    if (isHarmonyOS()) {
-      if (trySystemShare(url, jsonStr, filename)) return;
-      doExportFallback(url, filename, '鸿蒙设备：点击下载，或长按链接保存');
-      return;
-    }
-
-    if (isMobile() && trySystemShare(url, jsonStr, filename)) return;
-
-    doExportFallback(url, filename, '正在尝试下载，若未成功请使用：');
+    showCopyOnly('请点击下方按钮复制 JSON 数据，可粘贴到备忘录或发给对方保存');
   }
 
   function importFromJsonString(text) {
@@ -253,20 +107,9 @@
     alert('导入成功');
   }
 
-  function importFromFile(file) {
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function () {
-      importFromJsonString(reader.result);
-    };
-    reader.readAsText(file, 'UTF-8');
-  }
-
   function openTransferOverlay() {
-    revokeLastExportUrl();
     hideExportLinkWrap();
     hideImportPasteWrap();
-    isExporting = false;
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
       overlay.classList.add('is-open');
@@ -276,7 +119,6 @@
 
   function closeTransferOverlay() {
     hideExportLinkWrap();
-    if (lastExportUrl && !isExporting) setTimeout(revokeLastExportUrl, 1000);
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
       overlay.classList.remove('is-open');
@@ -286,9 +128,8 @@
 
   function bind() {
     var btnOpenTransfer = document.getElementById('btn-open-transfer');
-    var btnExportFile = document.getElementById('btn-export-file');
-    var btnImportFile = document.getElementById('btn-import-file');
-    var inputImportFile = document.getElementById('input-import-file');
+    var btnExportCopyOnly = document.getElementById('btn-export-copy-only');
+    var btnExportCopy = document.getElementById('btn-export-copy');
 
     if (btnOpenTransfer) btnOpenTransfer.addEventListener('click', openTransferOverlay);
     document.querySelectorAll('.close-transfer-btn').forEach(function (btn) {
@@ -299,9 +140,8 @@
       if (e.target === mainOverlay) closeTransferOverlay();
     });
 
-    if (btnExportFile) btnExportFile.addEventListener('click', exportToFile);
+    if (btnExportCopyOnly) btnExportCopyOnly.addEventListener('click', exportCopyOnly);
 
-    var btnExportCopy = document.getElementById('btn-export-copy');
     if (btnExportCopy) btnExportCopy.addEventListener('click', function () {
       if (!lastExportJson) return;
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -320,15 +160,6 @@
         document.body.removeChild(ta);
       }
     });
-
-    if (btnImportFile && inputImportFile) {
-      btnImportFile.addEventListener('click', function () { inputImportFile.click(); });
-      inputImportFile.addEventListener('change', function () {
-        var f = inputImportFile.files && inputImportFile.files[0];
-        if (f) importFromFile(f);
-        inputImportFile.value = '';
-      });
-    }
 
     var btnImportPaste = document.getElementById('btn-import-paste');
     var inputImportPaste = document.getElementById('input-import-paste');
