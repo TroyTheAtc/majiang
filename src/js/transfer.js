@@ -41,11 +41,6 @@
 
   var lastExportJson = '';
 
-  function hideExportLinkWrap() {
-    var wrap = document.getElementById('transfer-export-link-wrap');
-    if (wrap) wrap.style.display = 'none';
-  }
-
   function hideImportPasteWrap() {
     var wrap = document.getElementById('transfer-import-paste-wrap');
     var ta = document.getElementById('input-import-paste');
@@ -60,26 +55,25 @@
     if (ta) { ta.value = ''; ta.focus(); }
   }
 
-  function showCopyOnly(message) {
-    var wrap = document.getElementById('transfer-export-link-wrap');
-    var hint = wrap ? wrap.querySelector('.transfer-export-hint') : null;
-    var link = document.getElementById('transfer-export-link');
-    var copyBtn = document.getElementById('btn-export-copy');
-    if (wrap) wrap.style.display = 'block';
-    if (hint) hint.textContent = message || '请点击下方按钮复制 JSON 数据';
-    if (link) link.style.display = 'none';
-    if (copyBtn) {
-      copyBtn.style.display = 'block';
-      copyBtn.textContent = '复制 JSON 文本';
-      setTimeout(function () { try { copyBtn.click(); } catch (e) {} }, 300);
-    }
-  }
-
-  function exportCopyOnly() {
+  function doCopyJson() {
     var records = getRecords();
     var jsonStr = JSON.stringify(records, null, 2);
     lastExportJson = jsonStr;
-    showCopyOnly('请点击下方按钮复制 JSON 数据，可粘贴到备忘录或发给对方保存');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(jsonStr).then(function () { alert('已复制到剪贴板'); }).catch(function () { alert('复制失败'); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = jsonStr;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        alert('已复制到剪贴板');
+      } catch (e) { alert('复制失败'); }
+      document.body.removeChild(ta);
+    }
   }
 
   function importFromJsonString(text) {
@@ -108,7 +102,6 @@
   }
 
   function openTransferOverlay() {
-    hideExportLinkWrap();
     hideImportPasteWrap();
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
@@ -118,7 +111,6 @@
   }
 
   function closeTransferOverlay() {
-    hideExportLinkWrap();
     var overlay = document.getElementById('transfer-overlay');
     if (overlay) {
       overlay.classList.remove('is-open');
@@ -128,7 +120,6 @@
 
   function bind() {
     var btnOpenTransfer = document.getElementById('btn-open-transfer');
-    var btnExportCopyOnly = document.getElementById('btn-export-copy-only');
     var btnExportCopy = document.getElementById('btn-export-copy');
 
     if (btnOpenTransfer) btnOpenTransfer.addEventListener('click', openTransferOverlay);
@@ -140,26 +131,7 @@
       if (e.target === mainOverlay) closeTransferOverlay();
     });
 
-    if (btnExportCopyOnly) btnExportCopyOnly.addEventListener('click', exportCopyOnly);
-
-    if (btnExportCopy) btnExportCopy.addEventListener('click', function () {
-      if (!lastExportJson) return;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(lastExportJson).then(function () { alert('已复制到剪贴板'); }).catch(function () { alert('复制失败'); });
-      } else {
-        var ta = document.createElement('textarea');
-        ta.value = lastExportJson;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand('copy');
-          alert('已复制到剪贴板');
-        } catch (e) { alert('复制失败'); }
-        document.body.removeChild(ta);
-      }
-    });
+    if (btnExportCopy) btnExportCopy.addEventListener('click', doCopyJson);
 
     var btnImportPaste = document.getElementById('btn-import-paste');
     var inputImportPaste = document.getElementById('input-import-paste');
