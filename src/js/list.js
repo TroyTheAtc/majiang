@@ -9,17 +9,15 @@
   var add = window.MahjongApp && window.MahjongApp.add;
   var view = window.MahjongApp && window.MahjongApp.view;
   var stats = window.MahjongApp && window.MahjongApp.stats;
-  if (!data || !add || !view) return;
+  var longPress = window.MahjongApp && window.MahjongApp.longPress;
+  if (!data || !add || !view || !longPress) return;
 
-  const LONG_PRESS_MS = 500;
-  const listEl = document.getElementById('record-list');
+  var listEl = document.getElementById('record-list');
+  var LIST_ITEM = '.record-item';
+  var DELETE_BTN = '.btn-delete';
 
   function clearShowDelete() {
-    if (!listEl) return;
-    listEl.querySelectorAll('.record-item.show-delete').forEach(function (el) {
-      el.classList.remove('show-delete');
-      el._longPressShown = false;
-    });
+    longPress.clearActive(listEl, { itemSelector: LIST_ITEM });
   }
 
   function doEdit(item) {
@@ -31,6 +29,33 @@
     add.setEditingId(id);
     add.fillForm(r);
     view.switchView('add');
+  }
+
+  /** 删除一条记录（触摸端与桌面端共用） */
+  function doDelete(id) {
+    if (!id) return;
+    if (!confirm('确定删除这条记录？')) return;
+    data.deleteRecord(id);
+    renderList();
+    if (stats && stats.renderStats) stats.renderStats();
+    if (navigator.vibrate) navigator.vibrate(30);
+  }
+
+  /** 删除按钮本身不参与长按/短按追踪，让它的原生 click 正常工作。
+      （触摸端原本就是因为这里的短按把 touchend 吞掉，才点不掉记录。） */
+  function isDeleteTarget(target) {
+    return !!(target && target.closest && target.closest(DELETE_BTN));
+  }
+
+  /** 触摸端短按卡片本体（删除按钮已排除，走 click）：
+      亮出删除按钮时轻点 = 收回；否则进编辑页。 */
+  function onTapItem(item) {
+    if (!item) return;
+    if (item._longPressShown) {
+      clearShowDelete();
+      return;
+    }
+    doEdit(item);
   }
 
   function renderList() {
@@ -91,143 +116,38 @@
     });
   }
 
-  /* 列表事件委托 */
-  var listActiveItem = null;
-  var listTimer = null;
-  var listLongPressTriggered = false;
-  var listMoved = false;
-
-  function listClearTimer() {
-    if (listTimer) {
-      clearTimeout(listTimer);
-      listTimer = null;
-    }
-  }
-
-  function listOnTouchStart(e) {
-    var item = e.target.closest('.record-item');
-    if (!item) return;
-    listActiveItem = item;
-    listLongPressTriggered = false;
-    listMoved = false;
-    listClearTimer();
-    listTimer = setTimeout(function () {
-      listTimer = null;
-      listLongPressTriggered = true;
-      listEl.querySelectorAll('.record-item').forEach(function (el) {
-        el.classList.remove('show-delete');
-        el._longPressShown = false;
-      });
-      item.classList.add('show-delete');
-      item._longPressShown = true;
-      item.classList.add('shake');
-      setTimeout(function () { item.classList.remove('shake'); }, 350);
-      if (navigator.vibrate) navigator.vibrate(40);
-    }, LONG_PRESS_MS);
-  }
-
-  function listOnTouchMove() {
-    listMoved = true;
-    listClearTimer();
-  }
-
-  function listOnTouchEnd(e) {
-    if (!listActiveItem) return;
-    if (listLongPressTriggered) {
-      listActiveItem._longPressShown = false;
-      listClearTimer();
-      listActiveItem = null;
-      return;
-    }
-    if (listMoved) {
-      listClearTimer();
-      listActiveItem = null;
-      return;
-    }
-    listClearTimer();
-    if (e.type === 'touchend') {
-      e.preventDefault();
-      doEdit(listActiveItem);
-    }
-    listActiveItem = null;
-  }
-
-  function listOnTouchCancel() {
-    listClearTimer();
-    listActiveItem = null;
-  }
-
-  function listOnMouseDown(e) {
-    var item = e.target.closest('.record-item');
-    if (!item) return;
-    listActiveItem = item;
-    listMoved = false;
-    listLongPressTriggered = false;
-    listClearTimer();
-    listTimer = setTimeout(function () {
-      listTimer = null;
-      listLongPressTriggered = true;
-      listEl.querySelectorAll('.record-item').forEach(function (el) {
-        el.classList.remove('show-delete');
-        el._longPressShown = false;
-      });
-      item.classList.add('show-delete');
-      item._longPressShown = true;
-      item.classList.add('shake');
-      setTimeout(function () { item.classList.remove('shake'); }, 350);
-      if (navigator.vibrate) navigator.vibrate(40);
-    }, LONG_PRESS_MS);
-  }
-
-  function listOnMouseMove() {
-    listMoved = true;
-    listClearTimer();
-  }
-
-  function listOnMouseUp() {
-    if (!listActiveItem) return;
-    if (listLongPressTriggered) {
-      listActiveItem._longPressShown = false;
-    }
-    listClearTimer();
-    listActiveItem = null;
-  }
+  /* 列表交互：长按亮出删除按钮（公共工具负责 touch/mouse 双套与长按计时），
+     短按进编辑页，删除按钮走点击委托。 */
+  longPress.bind(listEl, {
+    itemSelector: LIST_ITEM,
+    /* 长按后抬手，浏览器补发的那次 click 交给公共工具吞掉（否则会把刚亮出的
+       删除按钮又收回去、并跳进编辑页），所以这里不能抬手就清标记。 */
+    clearFlagOnLift: false,
+    swallowReleaseClick: true,
+    isExcluded: isDeleteTarget,
+    onTap: onTapItem
+  });
 
   function listOnClick(e) {
-    var delBtn = e.target.closest('.btn-delete');
+    var delBtn = e.target.closest(DELETE_BTN);
     if (delBtn) {
-      e.stopPropagation();
       e.preventDefault();
-      if (confirm('确定删除这条记录？')) {
-        data.deleteRecord(delBtn.getAttribute('data-id'));
-        renderList();
-        if (stats && stats.renderStats) stats.renderStats();
-        if (navigator.vibrate) navigator.vibrate(30);
-      }
+      e.stopPropagation();
+      doDelete(delBtn.getAttribute('data-id'));
       return;
     }
-    var item = e.target.closest('.record-item');
-    if (item) {
-      if (item._longPressShown) {
-        item._longPressShown = false;
-        e.preventDefault();
-        return;
-      }
-      doEdit(item);
+    var item = e.target.closest(LIST_ITEM);
+    if (!item) return;
+    /* 长按已亮出操作按钮：这次点击只是收起来，不进编辑页 */
+    if (item._longPressShown) {
+      e.preventDefault();
+      clearShowDelete();
+      return;
     }
+    doEdit(item);
   }
 
-  if (listEl) {
-    listEl.addEventListener('touchstart', listOnTouchStart, { passive: true });
-    listEl.addEventListener('touchmove', listOnTouchMove, { passive: true });
-    listEl.addEventListener('touchend', listOnTouchEnd, { passive: false });
-    listEl.addEventListener('touchcancel', listOnTouchCancel, { passive: true });
-    listEl.addEventListener('mousedown', listOnMouseDown);
-    listEl.addEventListener('mousemove', listOnMouseMove);
-    listEl.addEventListener('mouseup', listOnMouseUp);
-    listEl.addEventListener('mouseleave', listClearTimer);
-    listEl.addEventListener('click', listOnClick);
-  }
+  if (listEl) listEl.addEventListener('click', listOnClick);
 
   window.MahjongApp = window.MahjongApp || {};
   window.MahjongApp.list = { renderList: renderList, clearShowDelete: clearShowDelete };

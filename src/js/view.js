@@ -16,8 +16,10 @@
       window.MahjongApp.stats.renderStats();
     }
     if (viewId === 'divine' && window.MahjongApp && window.MahjongApp.divine) {
-      var dateStr = new Date().toISOString().slice(0, 10);
-      window.MahjongApp.divine.renderDivine(dateStr);
+      /* 优先沿用上次选定的日期（app.js 会写入 divine_last_date），否则用今天 */
+      var lastDate = null;
+      try { lastDate = localStorage.getItem('divine_last_date'); } catch (e) {}
+      window.MahjongApp.divine.renderDivine(lastDate || window.MahjongApp.data.todayStr());
     }
   }
 

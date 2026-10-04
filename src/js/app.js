@@ -19,6 +19,7 @@
   var addRecord = data.addRecord;
   var updateRecord = data.updateRecord;
   var getCategories = data.getCategories;
+  var todayStr = data.todayStr;
   var renderList = list.renderList;
   var renderStats = stats ? stats.renderStats : function () {};
   var initForm = add.initForm;
@@ -33,10 +34,7 @@
 
   document.addEventListener('click', function (e) {
     if (e.target.closest('.record-item')) return;
-    document.querySelectorAll('.record-item.show-delete').forEach(function (el) {
-      el.classList.remove('show-delete');
-      el._longPressShown = false;
-    });
+    if (list.clearShowDelete) list.clearShowDelete();
     if (e.target.closest('.category-chip') || e.target.closest('.category-add-btn')) return;
     if (add.clearCategoryShowDelete) add.clearCategoryShowDelete();
   });
@@ -86,14 +84,14 @@
       addRecord(formData);
     }
     form.reset();
-    form.date.value = new Date().toISOString().slice(0, 10);
+    form.date.value = todayStr();
     renderList();
     renderStats();
     switchView('list');
   });
 
   var dateInput = document.querySelector('[name="date"]');
-  if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+  if (dateInput) dateInput.value = todayStr();
 
   var viewDivine = document.getElementById('view-divine');
   if (viewDivine) {
@@ -108,6 +106,25 @@
     });
   }
 
+  /* ---------- 昵称与版本号 ---------- */
+  /** 把命主昵称同步到页头、浏览器标题与主屏图标名（昵称可在占卜页「命主设置」里改） */
+  function syncNick() {
+    var fate = window.MahjongApp && window.MahjongApp.fate;
+    var nick = (fate && fate.getNick) ? fate.getNick() : '老婆';
+    var node = document.getElementById('logo-nick');
+    if (node) node.textContent = nick;
+    var title = nick + '的麻将日记';
+    document.title = title;
+    var meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (meta) meta.setAttribute('content', title);
+  }
+
+  window.MahjongApp = window.MahjongApp || {};
+  window.MahjongApp.app = { syncNick: syncNick };
+
   updateEyeButton();
   renderList();
+  syncNick();
+  var versionNode = document.getElementById('app-version');
+  if (versionNode) versionNode.textContent = 'v' + data.APP_VERSION;
 })();

@@ -10,6 +10,22 @@
   const CATEGORIES_KEY = 'mahjong_categories';
   const DEFAULT_CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
 
+  /** 资源版本号：改版本时此处与 index.html 的 ?v= 同步（index.html 无构建，无法自动注入） */
+  const APP_VERSION = '2.0.0';
+
+  /**
+   * 本地时区的 YYYY-MM-DD。
+   * 不能用 new Date().toISOString().slice(0,10)：那是 UTC 日期，
+   * 北京时间 00:00–08:00 会得到"昨天"。
+   */
+  function todayStr(base) {
+    var d = base ? new Date(base) : new Date();
+    if (isNaN(d.getTime())) return '';
+    var m = d.getMonth() + 1;
+    var day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+  }
+
   function getCategories() {
     try {
       var raw = localStorage.getItem(CATEGORIES_KEY);
@@ -115,11 +131,13 @@
     });
   }
 
+  /* 同时转义引号：多处把它用在 value="..." / data-xxx="..." 属性里，
+     只转 & < > 的话，名称里带引号会撑破属性（用户可自定义"对象"名称）。 */
+  const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
   function escapeHtml(s) {
     if (s == null) return '';
-    const div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
+    return String(s).replace(/[&<>"']/g, function (ch) { return ESCAPE_MAP[ch]; });
   }
 
   window.MahjongApp = window.MahjongApp || {};
@@ -127,6 +145,8 @@
     STORAGE_KEY: STORAGE_KEY,
     HIDE_AMOUNTS_KEY: HIDE_AMOUNTS_KEY,
     CATEGORIES_KEY: CATEGORIES_KEY,
+    APP_VERSION: APP_VERSION,
+    todayStr: todayStr,
     getCategories: getCategories,
     saveCategories: saveCategories,
     addCategory: addCategory,

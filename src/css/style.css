@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.4.4") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.0") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=1.6.4.4") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.0") center / cover no-repeat;
   }
 
   .app::before {
@@ -588,6 +588,162 @@ body {
   color: var(--text-muted);
   margin-top: 6px;
   margin-bottom: 0;
+  text-align: center;
+}
+
+/* ---------- 命主栏 ---------- */
+.divine-fate-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: var(--radius-tile);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.divine-fate-bar b { color: var(--red-main); font-weight: 600; }
+.divine-fate-birth { margin-left: 6px; opacity: 0.75; }
+.divine-fate-bar.is-empty {
+  background: rgba(201, 162, 39, 0.12);
+  border-style: dashed;
+}
+.divine-fate-text { min-width: 0; }
+.divine-fate-edit {
+  flex: none;
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--red-main);
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.divine-fate-edit:active { opacity: 0.85; }
+
+/* ---------- 推演依据 ---------- */
+.divine-basis {
+  margin: 18px 0 16px;
+  padding: 12px 14px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: var(--radius-tile);
+}
+.divine-basis-title {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  color: var(--red-main);
+  text-align: center;
+}
+.divine-basis-list { list-style: none; margin: 0; padding: 0; }
+.divine-basis-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.07);
+}
+.divine-basis-item:last-child { border-bottom: none; }
+.divine-basis-tag {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  color: #fff;
+  background: var(--text-muted);
+  opacity: 0.6;
+}
+.divine-basis-item.is-personal { color: var(--text); }
+.divine-basis-item.is-personal .divine-basis-tag { background: var(--red-main); opacity: 1; }
+.divine-basis-item.is-muted { opacity: 0.7; }
+.divine-basis-label { flex: 1; }
+.divine-basis-delta {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+/* ---------- 黄历补充 ---------- */
+.divine-almanac .divine-extra {
+  margin: 8px 0 0;
+  padding-top: 6px;
+  font-size: 0.78rem;
+  color: rgba(255, 248, 228, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ---------- 应验对账 ---------- */
+.divine-verify {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: var(--radius-tile);
+}
+.divine-verify-title {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  color: var(--red-main);
+}
+.divine-verify-today {
+  margin: 0 0 6px;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.divine-verify-today.is-hit { color: var(--win); }
+.divine-verify-today.is-miss { color: var(--loss); }
+.divine-verify-today.is-pending,
+.divine-verify-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.divine-verify-stat { margin: 0 0 4px; font-size: 0.85rem; color: var(--text); }
+.divine-verify-stat b { color: var(--red-main); }
+.divine-verify-detail { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
+
+/* ---------- 命主设置面板 ---------- */
+.fate-field { margin-bottom: 14px; text-align: left; }
+.fate-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--red-main);
+}
+.fate-field input {
+  display: block;
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+}
+.fate-hint {
+  margin: 0 0 14px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-muted);
   text-align: center;
 }
 

@@ -1,6 +1,6 @@
 # 老婆的麻将日记 — GitHub Pages 公网部署指南
 
-当前版本：**1.6.4.4**（H5 稳定版，鸿蒙端开发以此版本为基线）
+当前版本：**2.0.0**（H5 稳定版，鸿蒙端开发以此版本为基线）
 
 按下面步骤操作，即可获得一个免费公网地址（如 `https://TroyTheAtc.github.io/majiang/`），手机随时打开使用。
 
@@ -15,8 +15,8 @@
 | `index.html` | 页面入口 |
 | `src/css/style.css` | 样式 |
 | `src/js/data.js`、`stats.js`、`view.js`、`add.js`、`list.js`、`divine.js`、`transfer.js`、`app.js` | 逻辑与数据（按模块拆分，需全部上传） |
-| `assets/js/` | 脚本：`solarlunar.min.js`、`lunar.min.js`、`lz-string.min.js`、`qrcode.min.js`、`jsQR.min.js` 等 |
-| `assets/images/` | 图片资源：背景图 `background.jpg`，以及 `bianji.png`、`shanchu.png`、`yanjing.png`、`eye-close.png`、等级图、箭头图等 |
+| `assets/js/` | 脚本：`solarlunar.min.js`、`lunar.min.js` |
+| `assets/images/` | 图片资源：背景图 `background.jpg`；主屏/标签页图标 `icon-180.png`、`icon-32.png`；占卜等级图 `yishou/ping/ji/daji.webp`（WebP）；以及 `shanchu.png`、`yanjing.png`、`eye-close.png`、`tianjia.png`、箭头图等 |
 
 其它文件（如 `docs/`、`README.md` 等）可一并提交，不影响网页运行。
 
@@ -95,7 +95,7 @@ cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git com
 
 若想写具体更新说明，把 `-m "更新"` 改成例如 `-m "优化背景图加载"` 即可。推送完成后，GitHub Pages 会自动重新部署。
 
-**让手机端马上看到新版本**：推送后若手机仍显示旧版，是浏览器缓存。在项目里全局搜索当前版本号（如 `?v=1.6.4.4`）全部替换为新版本号（如 `?v=1.6.4.4`），再执行上面命令推送一次，手机刷新后就会拉新文件。
+**让手机端马上看到新版本**：推送后若手机仍显示旧版，是浏览器缓存。把 `index.html` 里所有 `?v=旧版本号` 改成新版本号（同时改 `src/js/data.js` 里的 `APP_VERSION`，页面底部版本号由它渲染），再推送一次，手机刷新后就会拉新文件。
 
 ---
 
@@ -109,8 +109,16 @@ cd "/Users/troy/Desktop/个人材料/000-宝宝/MAJIANG" && git add . && git com
 
 ---
 
-## 八、黄历（占卜宜忌）
+## 八、黄历与占卜
 
-占卜页的「宜/忌」使用 [lunar-javascript](https://github.com/6tail/lunar-javascript) 按公历日期计算**建除十二值日**（月支起建），再根据自建规则得出宜忌与等级，无需联网、无 API key。若该库未加载则自动回退到内置黄历表。
+全部计算都在本地完成，**不联网、无 API key、无任何费用**。
+
+- **历法**：使用 [lunar-javascript](https://github.com/6tail/lunar-javascript)（MIT 许可）计算农历、干支、黄道黑道、二十八宿、建除十二值日、每日宜忌、财神/喜神方位、冲煞等；`solarlunar` 仅用于农历文字展示。
+- **麻运档位**（宜守/平/吉/大吉）由 `src/js/fate.js` 计算：
+  1. **命主**：在占卜页「命主设置」填生日后，取出生日柱天干得"日主五行"；
+  2. **生克**：当日日干五行与命主日主比较（我克为财最利、克我受制最忌）；
+  3. **日辰**：黄道黑道、二十八宿吉凶、官方宜忌里的"纳财/开市"、建除值日，按权重累加；
+  4. **个人微扰**：`PRNG(命主指纹 + 日期)` 派生，保证"同人同天恒定、不同人不同"，强度为温和档。
+- **对账**：占卜**不使用战绩数据**，所以历史日期可随时回溯重算，页面底部"应验对账"会自动把当日麻运与实际战绩核对。
 
 完成以上步骤后，H5 即通过 GitHub Pages 上公网，免费使用。

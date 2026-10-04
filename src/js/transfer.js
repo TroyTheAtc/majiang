@@ -55,9 +55,20 @@
     if (ta) { ta.value = ''; ta.focus(); }
   }
 
+  /** 导出内容：战绩 + 命主档案（换设备不丢"命"） */
+  function buildExportPayload() {
+    var fate = window.MahjongApp && window.MahjongApp.fate;
+    return {
+      app: 'mahjong',
+      version: data.APP_VERSION,
+      exportedAt: new Date().toISOString(),
+      fate: (fate && fate.getExportProfile) ? fate.getExportProfile() : null,
+      records: getRecords()
+    };
+  }
+
   function doCopyJson() {
-    var records = getRecords();
-    var jsonStr = JSON.stringify(records, null, 2);
+    var jsonStr = JSON.stringify(buildExportPayload(), null, 2);
     lastExportJson = jsonStr;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(jsonStr).then(function () { alert('已复制到剪贴板'); }).catch(function () { alert('复制失败'); });
@@ -76,6 +87,11 @@
     }
   }
 
+  /**
+   * 兼容两种备份：
+   *   旧版 → 纯记录数组 [ {...} ]
+   *   新版 → { app, version, exportedAt, fate:{nick,birth}, records:[...] }
+   */
   function importFromJsonString(text) {
     if (typeof text !== 'string') return;
     var trimmed = text.trim();
@@ -83,11 +99,21 @@
       alert('没有可导入的内容');
       return;
     }
-    var arr;
+    var parsed;
     try {
-      arr = JSON.parse(trimmed);
+      parsed = JSON.parse(trimmed);
     } catch (e) {
       alert('格式无效，请确认是完整的 JSON 数据');
+      return;
+    }
+    var arr, fatePayload = null;
+    if (Array.isArray(parsed)) {
+      arr = parsed;
+    } else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.records)) {
+      arr = parsed.records;
+      fatePayload = parsed.fate || null;
+    } else {
+      alert('数据格式不符合要求');
       return;
     }
     if (!validateRecords(arr)) {
@@ -95,8 +121,12 @@
       return;
     }
     saveRecords(normalizeRecords(arr));
+    if (fatePayload && window.MahjongApp && window.MahjongApp.fate) {
+      window.MahjongApp.fate.applyImportProfile(fatePayload);
+    }
     if (window.MahjongApp && window.MahjongApp.list && window.MahjongApp.list.renderList) window.MahjongApp.list.renderList();
     if (window.MahjongApp && window.MahjongApp.stats && window.MahjongApp.stats.renderStats) window.MahjongApp.stats.renderStats();
+    if (window.MahjongApp && window.MahjongApp.app && window.MahjongApp.app.syncNick) window.MahjongApp.app.syncNick();
     if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
     alert('导入成功');
   }

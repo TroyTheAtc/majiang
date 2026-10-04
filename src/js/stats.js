@@ -40,44 +40,55 @@
     return { totalGames: totalGames, winGames: winGames, winRate: winRate, avgScore: avgScore, sumAmount: sumAmount };
   }
 
-  /** 最长连胜场数：按日期顺序遍历，连续 amount>0 的最大长度 */
-  function getMaxWinStreak(records) {
-    if (!records.length) return 0;
-    var sorted = records.slice().sort(function (a, b) {
-      var d = (a.date || '').localeCompare(b.date || '');
-      return d !== 0 ? d : (a.id || '').localeCompare(b.id || '');
-    });
-    var max = 0;
-    var cur = 0;
-    for (var i = 0; i < sorted.length; i++) {
-      if ((sorted[i].amount || 0) > 0) {
-        cur++;
-        if (cur > max) max = cur;
-      } else {
-        cur = 0;
-      }
-    }
-    return max;
+  /** 日期升序比较（同日按 id 兜底，保证顺序稳定） */
+  function compareByDateTime(a, b) {
+    var d = (a.date || '').localeCompare(b.date || '');
+    return d !== 0 ? d : (a.id || '').localeCompare(b.id || '');
   }
 
-  /** 最长连败场数：按日期顺序遍历，连续 amount<0 的最大长度 */
-  function getMaxLossStreak(records) {
-    if (!records.length) return 0;
-    var sorted = records.slice().sort(function (a, b) {
-      var d = (a.date || '').localeCompare(b.date || '');
-      return d !== 0 ? d : (a.id || '').localeCompare(b.id || '');
-    });
-    var max = 0;
-    var cur = 0;
-    for (var j = 0; j < sorted.length; j++) {
-      if ((sorted[j].amount || 0) < 0) {
-        cur++;
-        if (cur > max) max = cur;
+  function sortByDateTime(records) {
+    return records.slice().sort(compareByDateTime);
+  }
+
+  /**
+   * 一次排序算出全部连场信息（原先 getMaxWinStreak / getMaxLossStreak / getRecentStreak
+   * 各排一次序、逻辑重复三份）：
+   *   maxWin / maxLoss —— 历史最长连胜 / 连败
+   *   recent           —— 从最近一场往前数，仅当 ≥2 场时返回 { type, count }
+   */
+  function computeStreaks(sorted) {
+    var maxWin = 0, maxLoss = 0, curWin = 0, curLoss = 0;
+    for (var i = 0; i < sorted.length; i++) {
+      var amt = Number(sorted[i].amount) || 0;
+      if (amt > 0) {
+        curWin++;
+        curLoss = 0;
+        if (curWin > maxWin) maxWin = curWin;
+      } else if (amt < 0) {
+        curLoss++;
+        curWin = 0;
+        if (curLoss > maxLoss) maxLoss = curLoss;
       } else {
-        cur = 0;
+        curWin = 0;
+        curLoss = 0;
       }
     }
-    return max;
+
+    var recent = null;
+    var n = sorted.length;
+    if (n > 0) {
+      var last = Number(sorted[n - 1].amount) || 0;
+      if (last !== 0) {
+        var wantWin = last > 0;
+        var count = 0;
+        for (var j = n - 1; j >= 0; j--) {
+          var a = Number(sorted[j].amount) || 0;
+          if (wantWin ? a > 0 : a < 0) count++; else break;
+        }
+        if (count >= 2) recent = { type: wantWin ? 'win' : 'loss', count: count };
+      }
+    }
+    return { maxWin: maxWin, maxLoss: maxLoss, recent: recent };
   }
 
   /** 单场最多/最低得分：返回 { max, min }，无记录时为 null */
@@ -91,33 +102,6 @@
       if (amt < min) min = amt;
     }
     return { max: max, min: min };
-  }
-
-  /** 最近连胜/连败：按日期倒序，从最近一场开始数，连续赢或连续输的场数；仅当 ≥2 时返回 */
-  function getRecentStreak(records) {
-    if (!records.length) return null;
-    var sorted = records.slice().sort(function (a, b) {
-      var d = (b.date || '').localeCompare(a.date || '');
-      if (d !== 0) return d;
-      return (b.id || '').localeCompare(a.id || '');
-    });
-    var first = sorted[0];
-    var amt = first.amount != null ? Number(first.amount) : 0;
-    if (amt > 0) {
-      var count = 1;
-      for (var i = 1; i < sorted.length; i++) {
-        if ((sorted[i].amount || 0) > 0) count++; else break;
-      }
-      return count >= 2 ? { type: 'win', count: count } : null;
-    }
-    if (amt < 0) {
-      var countLoss = 1;
-      for (var j = 1; j < sorted.length; j++) {
-        if ((sorted[j].amount || 0) < 0) countLoss++; else break;
-      }
-      return countLoss >= 2 ? { type: 'loss', count: countLoss } : null;
-    }
-    return null;
   }
 
   function showDetailCard(displayName, statsType, key) {
@@ -154,8 +138,10 @@
       avgEl.className = '';
     }
 
-    var maxWin = getMaxWinStreak(subset);
-    var maxLoss = getMaxLossStreak(subset);
+    /* 连胜/连败一次算清，避免对同一批记录重复排序 */
+    var streaks = computeStreaks(sortByDateTime(subset));
+    var maxWin = streaks.maxWin;
+    var maxLoss = streaks.maxLoss;
     if (maxWinStreakEl) {
       maxWinStreakEl.textContent = maxWin > 0 ? maxWin + '场' : '—';
       maxWinStreakEl.className = maxWin > 0 ? 'positive' : '';
@@ -201,7 +187,7 @@
         streakEl.textContent = '';
         streakEl.className = 'stats-detail-streak';
       } else {
-        var streak = getRecentStreak(subset);
+        var streak = streaks.recent;
         if (streak && streak.count >= 2) {
           streakWrap.setAttribute('aria-hidden', 'false');
           streakEl.textContent = streak.type === 'win' ? streak.count + '连胜' : streak.count + '连败';
@@ -267,19 +253,25 @@
         items.push({ name: loc, sum: byLoc[loc], key: loc });
       });
     } else if (statsType === 'year') {
+      /* 一次遍历同时算出"按年合计"与"按年分组"，避免后面再对全部记录按年过滤一遍 */
       const byYear = {};
+      const yearGroups = {};
       records.forEach(function (r) {
         var y = (r.date || '').slice(0, 4) || '—';
-        if (byYear[y] === undefined) byYear[y] = 0;
+        if (byYear[y] === undefined) {
+          byYear[y] = 0;
+          yearGroups[y] = [];
+        }
         byYear[y] += (r.amount || 0);
+        yearGroups[y].push(r);
       });
       var currentYear = String(new Date().getFullYear());
       Object.keys(byYear).sort(function (a, b) { return b.localeCompare(a); }).forEach(function (y) {
-        var subset = getRecordsForStat(records, 'year', y);
         var streakText = '';
         var streakClass = '';
+        /* 只有当年需要显示最近连胜/连败，其余年份不必排序 */
         if (y === currentYear) {
-          var streak = getRecentStreak(subset);
+          var streak = computeStreaks(sortByDateTime(yearGroups[y])).recent;
           if (streak && streak.count >= 2) {
             streakText = streak.type === 'win' ? streak.count + '连胜' : streak.count + '连败';
             streakClass = streak.type === 'win' ? 'streak-win' : 'streak-loss';
