@@ -524,6 +524,98 @@ body {
   opacity: 0.5;
 }
 
+/* ---------- 未占卜：起卦入口 ---------- */
+.divine-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 44px 16px 52px;
+}
+
+.divine-idle-title {
+  margin: 0;
+  font-size: 1.3rem;
+  letter-spacing: 0.25em;
+  color: var(--red-main);
+}
+
+.divine-idle-sub {
+  margin: 0 0 14px 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.divine-idle-note {
+  margin: 12px 0 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+.divine-draw-btn {
+  position: relative;
+  overflow: hidden;
+  font-family: inherit;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  color: rgba(255, 248, 228, 0.98);
+  background: linear-gradient(135deg, var(--red-main) 0%, var(--red-light) 50%, #6b0000 100%);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-tile);
+  padding: 14px 36px;
+  min-height: var(--tap-min);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: transform 0.08s ease, opacity 0.12s ease;
+}
+
+.divine-draw-btn:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* 蓄力进度：从左往右填满（宽度由 JS 按按住时长逐帧写入） */
+.divine-draw-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(230, 195, 92, 0.95) 0%, rgba(230, 195, 92, 0.55) 100%);
+}
+
+.divine-draw-btn-text {
+  position: relative;
+  z-index: 1;
+}
+
+.divine-draw-btn.is-holding {
+  transform: scale(0.985);
+  box-shadow: 0 0 0 3px rgba(230, 195, 92, 0.35), 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .divine-content.is-reveal > * { animation: none; }
+}
+
+/* 起卦揭晓：结果淡入上浮 */
+.divine-content.is-reveal > * {
+  animation: divineReveal 0.6s ease both;
+}
+
+@keyframes divineReveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .divine-almanac {
   background: linear-gradient(135deg, var(--red-main) 0%, var(--red-light) 50%, #6b0000 100%);
   border: 2px solid var(--gold);

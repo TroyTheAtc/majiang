@@ -16,11 +16,10 @@
       window.MahjongApp.stats.renderStats();
     }
     if (viewId === 'divine' && window.MahjongApp && window.MahjongApp.divine) {
-      /* 每次进入占卜页都按「今天」渲染。
-         以前这里会读 localStorage 里的 divine_last_date（上次选定的日期），
-         于是今天打开时还停在前一天选的日期，看起来像"没刷新"。已去掉这个记忆；
-         要看别的日期，在页面里的日期选择器上选（页面提供了"回到今天"）。 */
-      window.MahjongApp.divine.renderDivine(window.MahjongApp.data.todayStr());
+      /* 进入占卜页先给「占卜今日麻运」按钮，不直接抛结果；
+         点按钮后才按「今天」起卦（同人同天结果恒定）。
+         不记忆上次选定的日期，避免"打开还停在前一天"。 */
+      window.MahjongApp.divine.renderIdle();
     }
   }
 

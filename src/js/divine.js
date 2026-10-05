@@ -90,8 +90,15 @@
   function renderFateBar(profile, res) {
     var nick = escapeHtml(profile.nick);
     if (profile.birth) {
-      var master = res && res.masterGan
-        ? '日主' + escapeHtml(res.masterGan) + escapeHtml(res.masterWx)
+      /* 未占卜（res 为空）时也把日主算出来展示，避免出现「日主未定」的错觉 */
+      var gan = res && res.masterGan;
+      var wx = res && res.masterWx;
+      if (!gan && fate && fate.getDayMaster) {
+        var dm = fate.getDayMaster(profile.birth);
+        if (dm) { gan = dm.gan; wx = dm.wx; }
+      }
+      var master = gan
+        ? '日主' + escapeHtml(gan) + escapeHtml(wx || '')
         : '日主未定';
       return '<div class="divine-fate-bar">' +
         '<span class="divine-fate-text">命主 <b>' + nick + '</b> · ' + master +
@@ -167,6 +174,100 @@
     }
     html += '</div>';
     return html;
+  }
+
+  /* ==================== 未占卜：起卦入口 ====================
+     进入占卜页先不抛结果，只给「开始占卜」按钮；
+     按钮要"长按蓄力"——进度条从左侧填满才成卦（同一人同一天结果恒定）。 */
+  function renderIdle() {
+    var container = document.getElementById('divine-content');
+    if (!container) return;
+    lastDate = '';
+
+    if (!fate) {
+      container.innerHTML = '<p class="divine-hint divine-hint-sub">占卜模块未加载，请刷新页面重试。</p>';
+      return;
+    }
+
+    var profile = fate.getProfile();
+
+    /* 历史回填：起卦前先把过去的战绩对账数据备好 */
+    try { fate.backfill(data.getRecords()); } catch (e) {}
+
+    container.innerHTML =
+      renderFateBar(profile, null) +
+      '<div class="divine-idle">' +
+        '<p class="divine-idle-title">今日麻运</p>' +
+        '<p class="divine-idle-sub">按住按钮不放，蓄满即成卦</p>' +
+        '<button type="button" class="divine-draw-btn">' +
+          '<span class="divine-draw-fill" aria-hidden="true"></span>' +
+          '<span class="divine-draw-btn-text">开始占卜</span>' +
+        '</button>' +
+        '<p class="divine-idle-note">同一天只算一次，结果不会变</p>' +
+      '</div>';
+  }
+
+  /* ==================== 起卦（长按蓄力） ==================== */
+  /* 蓄满所需时长与进度条宽度同源：都用这一条的 rAF 推进，
+     所以"进度条填满"与"出结果"发生在同一帧，不会一个先到。 */
+  var HOLD_MS = 1000;
+  var holdRaf = null;
+  var holdStartAt = 0;
+  var holdBtn = null;
+
+  var rafFn = window.requestAnimationFrame
+    ? function (cb) { return window.requestAnimationFrame(cb); }
+    : function (cb) { return setTimeout(cb, 16); };
+  var cafFn = window.cancelAnimationFrame
+    ? function (id) { window.cancelAnimationFrame(id); }
+    : function (id) { clearTimeout(id); };
+
+  function setFill(btn, ratio) {
+    if (!btn) return;
+    var fill = btn.querySelector('.divine-draw-fill');
+    if (fill) fill.style.width = (Math.max(0, Math.min(1, ratio)) * 100) + '%';
+  }
+
+  function endHold(done) {
+    var btn = holdBtn;
+    holdBtn = null;
+    if (holdRaf) { cafFn(holdRaf); holdRaf = null; }
+    if (!btn) return;
+    btn.classList.remove('is-holding');
+    if (done) {
+      setFill(btn, 1);
+      if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+      startDraw();
+    } else {
+      setFill(btn, 0);
+    }
+  }
+
+  function tick() {
+    if (!holdBtn) return;
+    var r = (Date.now() - holdStartAt) / HOLD_MS;
+    if (r >= 1) { endHold(true); return; }
+    setFill(holdBtn, r);
+    holdRaf = rafFn(tick);
+  }
+
+  function beginHold(btn) {
+    if (holdBtn) endHold(false);
+    holdBtn = btn;
+    holdStartAt = Date.now();
+    btn.classList.add('is-holding');
+    setFill(btn, 0);
+    holdRaf = rafFn(tick);
+  }
+
+  function startDraw() {
+    /* 起卦即揭晓：结果本就是纯函数，同人同天恒定，这里只补一个淡入动画 */
+    renderDivine(data.todayStr());
+    var c = document.getElementById('divine-content');
+    if (c) {
+      c.classList.add('is-reveal');
+      setTimeout(function () { c.classList.remove('is-reveal'); }, 700);
+    }
   }
 
   /* ==================== 主渲染 ==================== */
@@ -268,7 +369,7 @@
     fate.saveProfile({ nick: nick, birth: birth });
     closeFatePanel();
     syncPageChrome();
-    renderDivine(lastDate || data.todayStr());
+    if (lastDate) renderDivine(lastDate); else renderIdle();
   }
 
   function clearFateBirth() {
@@ -277,7 +378,7 @@
     if (el('input-fate-birth')) el('input-fate-birth').value = '';
     updateFateHint();
     syncPageChrome();
-    renderDivine(lastDate || data.todayStr());
+    if (lastDate) renderDivine(lastDate); else renderIdle();
   }
 
   /** 昵称变化后同步页面标题（页头与浏览器标题） */
@@ -294,6 +395,12 @@
 
   /* ==================== 绑定 ==================== */
   var container = document.getElementById('divine-content');
+
+  function drawBtnOf(e) {
+    var t = e.target;
+    return (t && t.closest) ? t.closest('.divine-draw-btn') : null;
+  }
+
   if (container) {
     container.addEventListener('click', function (e) {
       if (e.target.closest('.divine-fate-edit')) {
@@ -305,6 +412,38 @@
         e.preventDefault();
         renderDivine(data.todayStr());
       }
+    });
+
+    /* 「开始占卜」是长按蓄力：按下开始填进度，松手/移开即作废。
+       用 touch + mouse 两套（与 longpress.js 同思路），不依赖 PointerEvent。 */
+    container.addEventListener('touchstart', function (e) {
+      var btn = drawBtnOf(e);
+      if (btn) beginHold(btn);
+    }, { passive: true });
+
+    container.addEventListener('touchmove', function () {
+      if (holdBtn) endHold(false);
+    }, { passive: true });
+
+    container.addEventListener('touchend', function () {
+      if (holdBtn) endHold(false);
+    }, { passive: true });
+
+    container.addEventListener('touchcancel', function () {
+      if (holdBtn) endHold(false);
+    }, { passive: true });
+
+    container.addEventListener('mousedown', function (e) {
+      var btn = drawBtnOf(e);
+      if (btn) { e.preventDefault(); beginHold(btn); }
+    });
+
+    container.addEventListener('mouseup', function () {
+      if (holdBtn) endHold(false);
+    });
+
+    container.addEventListener('mouseleave', function () {
+      if (holdBtn) endHold(false);
     });
   }
 
@@ -334,6 +473,7 @@
 
   window.MahjongApp = window.MahjongApp || {};
   window.MahjongApp.divine = {
+    renderIdle: renderIdle,
     renderDivine: renderDivine,
     openFatePanel: openFatePanel,
     closeFatePanel: closeFatePanel,
