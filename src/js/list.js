@@ -38,6 +38,9 @@
     data.deleteRecord(id);
     renderList();
     if (stats && stats.renderStats) stats.renderStats();
+    /* 删到一条不剩时备份提醒就没必要了（提醒条件要求"有数据"） */
+    var backup = window.MahjongApp && window.MahjongApp.backup;
+    if (backup && backup.renderBanner) backup.renderBanner();
     if (navigator.vibrate) navigator.vibrate(30);
   }
 

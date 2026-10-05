@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.0") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.1") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.0") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.1") center / cover no-repeat;
   }
 
   .app::before {
@@ -194,6 +194,75 @@ body {
   z-index: 1;
   padding: 16px;
   padding-bottom: calc(24px + var(--safe-bottom));
+}
+
+/* ========== 备份提醒条 ========== */
+.backup-banner {
+  margin: 0 0 14px 0;
+  padding: 12px 14px;
+  background: #fffaf0;
+  border: 1px solid var(--tile-border);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius-tile);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.backup-banner[hidden] {
+  display: none;
+}
+
+.backup-banner-title {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--red-main);
+}
+
+.backup-banner-sub {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.backup-banner-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.backup-banner-later,
+.backup-banner-go {
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  min-height: 34px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s ease, opacity 0.12s ease;
+}
+
+.backup-banner-later {
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--tile-border);
+}
+
+.backup-banner-go {
+  color: var(--gold-light);
+  background: linear-gradient(135deg, var(--red-main) 0%, var(--red-light) 55%, #6b0000 100%);
+  border: 1px solid var(--gold);
+}
+
+.backup-banner-later:active,
+.backup-banner-go:active {
+  transform: scale(0.97);
+  opacity: 0.9;
 }
 
 .view {

@@ -11,7 +11,7 @@
   const DEFAULT_CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
 
   /** 资源版本号：改版本时此处与 index.html 的 ?v= 同步（index.html 无构建，无法自动注入） */
-  const APP_VERSION = '2.0.0';
+  const APP_VERSION = '2.0.1';
 
   /**
    * 本地时区的 YYYY-MM-DD。
@@ -37,10 +37,28 @@
     return DEFAULT_CATEGORIES.slice();
   }
 
+  /**
+   * 本地存储写入失败提示（每次会话只弹一次，避免连点刷屏）。
+   * localStorage 失败并不罕见：配额写满、Safari 无痕、隐私模式禁用站点数据都会抛异常。
+   * 不 catch 的话异常会往上冒，调用方以为存成功了 —— 数据就静默丢了。
+   */
+  var saveFailureNotified = false;
+  function notifySaveFailure() {
+    if (saveFailureNotified) return;
+    saveFailureNotified = true;
+    try {
+      alert('保存失败：本机浏览器存储不可用或已写满。\n建议先用「数据导入/导出」导出一份备份，再清理空间/退出无痕模式后重试。');
+    } catch (e) {}
+  }
+
   function saveCategories(arr) {
     try {
       localStorage.setItem(CATEGORIES_KEY, JSON.stringify(arr));
-    } catch (e) {}
+      return true;
+    } catch (e) {
+      notifySaveFailure();
+      return false;
+    }
   }
 
   function addCategory(name) {
@@ -64,11 +82,17 @@
   }
 
   function getHideAmounts() {
-    return localStorage.getItem(HIDE_AMOUNTS_KEY) === '1';
+    try {
+      return localStorage.getItem(HIDE_AMOUNTS_KEY) === '1';
+    } catch (e) {
+      return false;
+    }
   }
 
   function setHideAmounts(hide) {
-    localStorage.setItem(HIDE_AMOUNTS_KEY, hide ? '1' : '0');
+    try {
+      localStorage.setItem(HIDE_AMOUNTS_KEY, hide ? '1' : '0');
+    } catch (e) {}
   }
 
   function getRecords() {
@@ -79,8 +103,22 @@
     }
   }
 
+  /** 写入战绩。返回是否真的写进去了，调用方据此决定要不要清空表单（失败时保留，别让用户白填） */
   function saveRecords(records) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    var raw;
+    try {
+      raw = JSON.stringify(records);
+    } catch (e) {
+      notifySaveFailure();
+      return false;
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, raw);
+      return true;
+    } catch (e) {
+      notifySaveFailure();
+      return false;
+    }
   }
 
   function addRecord(record) {
@@ -92,19 +130,19 @@
       location: (record.location || '').trim(),
       amount: record.amount
     });
-    saveRecords(list);
+    return saveRecords(list);
   }
 
   function deleteRecord(id) {
     let list = getRecords();
     list = list.filter(function (r) { return r.id !== id; });
-    saveRecords(list);
+    return saveRecords(list);
   }
 
   function updateRecord(id, record) {
     const list = getRecords();
     const idx = list.findIndex(function (r) { return r.id === id; });
-    if (idx === -1) return;
+    if (idx === -1) return false;
     list[idx] = {
       id: id,
       date: record.date,
@@ -112,7 +150,7 @@
       location: (record.location || '').trim(),
       amount: record.amount
     };
-    saveRecords(list);
+    return saveRecords(list);
   }
 
   function formatAmount(n) {
@@ -155,6 +193,7 @@
     setHideAmounts: setHideAmounts,
     getRecords: getRecords,
     saveRecords: saveRecords,
+    notifySaveFailure: notifySaveFailure,
     addRecord: addRecord,
     deleteRecord: deleteRecord,
     updateRecord: updateRecord,

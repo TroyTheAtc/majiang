@@ -23,6 +23,8 @@
   var renderList = list.renderList;
   var renderStats = stats ? stats.renderStats : function () {};
   var initForm = add.initForm;
+  var backup = window.MahjongApp && window.MahjongApp.backup;
+  var renderBanner = (backup && backup.renderBanner) || function () {};
 
   document.querySelectorAll('.tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
@@ -77,16 +79,17 @@
       location: form.location.value,
       amount: amount
     };
-    if (add.getEditingId()) {
-      updateRecord(add.getEditingId(), formData);
-      add.setEditingId(null);
-    } else {
-      addRecord(formData);
-    }
+    /* 写不进去（存储写满 / 无痕模式禁用）时保留表单与编辑态，让用户先备份再重试；
+       失败提示由 data.js 统一弹出，这里不重复。 */
+    var editingId = add.getEditingId();
+    var saved = editingId ? updateRecord(editingId, formData) : addRecord(formData);
+    if (!saved) return;
+    add.setEditingId(null);
     form.reset();
     form.date.value = todayStr();
     renderList();
     renderStats();
+    renderBanner();
     switchView('list');
   });
 
@@ -127,6 +130,7 @@
 
   updateEyeButton();
   renderList();
+  renderBanner();
   syncNick();
   var versionNode = document.getElementById('app-version');
   if (versionNode) versionNode.textContent = 'v' + data.APP_VERSION;

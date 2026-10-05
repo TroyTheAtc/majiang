@@ -81,10 +81,20 @@
     return normalizeProfile(readRaw());
   }
 
+  /** 存储写失败统一提示（复用 data.js 的"每次会话只提示一次"，避免各处各弹一条） */
+  function notifyStorageFailure() {
+    var d = window.MahjongApp && window.MahjongApp.data;
+    if (d && d.notifySaveFailure) d.notifySaveFailure();
+  }
+
   function writeProfile(p) {
     try {
       localStorage.setItem(PROFILE_KEY, JSON.stringify(normalizeProfile(p)));
-    } catch (e) {}
+      return true;
+    } catch (e) {
+      notifyStorageFailure();
+      return false;
+    }
   }
 
   function saveProfile(obj) {
@@ -117,18 +127,29 @@
    * 设备兜底种子：没填生日时用它保证"同一台设备同一天结果恒定"。
    * 只在首次生成一次随机值，之后固定持久化（不违反确定性）。
    */
+  var memSeed = '';
+
   function deviceSeed() {
+    /* 会话内记忆：万一落盘失败，也不能每次调用都换一个随机种子，
+       否则"同一人同一天结果恒定"会被打破（同一天反复出不同结果）。 */
+    if (memSeed) return memSeed;
     var raw = readRaw();
-    if (raw && typeof raw.seed === 'string' && raw.seed) return raw.seed;
+    if (raw && typeof raw.seed === 'string' && raw.seed) {
+      memSeed = raw.seed;
+      return memSeed;
+    }
     var s = '';
     for (var i = 0; i < 4; i++) s += Math.floor(Math.random() * 0x100000000).toString(36);
     s += Date.now().toString(36);
+    memSeed = s;
     try {
       var p = normalizeProfile(raw);
-      p.seed = s;
+      p.seed = memSeed;
       localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
-    } catch (e) {}
-    return s;
+    } catch (e) {
+      notifyStorageFailure();
+    }
+    return memSeed;
   }
 
   /** 占卜指纹：只用生日（或设备种子）。昵称不影响结果——改个名字不该改命 */

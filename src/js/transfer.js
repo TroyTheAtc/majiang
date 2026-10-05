@@ -11,7 +11,8 @@
     return data.getRecords();
   }
   function saveRecords(records) {
-    data.saveRecords(records);
+    /* 必须把 data 层的返回值透传出去：导入流程靠它判断是否真的写成功 */
+    return data.saveRecords(records);
   }
 
   function validateRecords(arr) {
@@ -67,11 +68,20 @@
     };
   }
 
+  /** 导出成功：告诉备份模块记下日期并收起「该备份一下了」提示条 */
+  function notifyExported() {
+    var app = window.MahjongApp || {};
+    if (app.backup && app.backup.markBackedUp) app.backup.markBackedUp();
+  }
+
   function doCopyJson() {
     var jsonStr = JSON.stringify(buildExportPayload(), null, 2);
     lastExportJson = jsonStr;
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(jsonStr).then(function () { alert('已复制到剪贴板'); }).catch(function () { alert('复制失败'); });
+      navigator.clipboard.writeText(jsonStr).then(function () {
+        notifyExported();
+        alert('已复制到剪贴板');
+      }).catch(function () { alert('复制失败'); });
     } else {
       var ta = document.createElement('textarea');
       ta.value = jsonStr;
@@ -81,6 +91,7 @@
       ta.select();
       try {
         document.execCommand('copy');
+        notifyExported();
         alert('已复制到剪贴板');
       } catch (e) { alert('复制失败'); }
       document.body.removeChild(ta);
@@ -120,13 +131,15 @@
       alert('数据格式不符合要求');
       return;
     }
-    saveRecords(normalizeRecords(arr));
+    /* 写不进去（存储满/被禁用）就别报"导入成功"——失败提示由 data.js 统一弹 */
+    if (!saveRecords(normalizeRecords(arr))) return;
     if (fatePayload && window.MahjongApp && window.MahjongApp.fate) {
       window.MahjongApp.fate.applyImportProfile(fatePayload);
     }
     if (window.MahjongApp && window.MahjongApp.list && window.MahjongApp.list.renderList) window.MahjongApp.list.renderList();
     if (window.MahjongApp && window.MahjongApp.stats && window.MahjongApp.stats.renderStats) window.MahjongApp.stats.renderStats();
     if (window.MahjongApp && window.MahjongApp.app && window.MahjongApp.app.syncNick) window.MahjongApp.app.syncNick();
+    if (window.MahjongApp && window.MahjongApp.backup && window.MahjongApp.backup.renderBanner) window.MahjongApp.backup.renderBanner();
     if (window.MahjongApp && window.MahjongApp.view && window.MahjongApp.view.switchView) window.MahjongApp.view.switchView('list');
     alert('导入成功');
   }
