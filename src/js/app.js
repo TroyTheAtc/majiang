@@ -93,13 +93,16 @@
   var dateInput = document.querySelector('[name="date"]');
   if (dateInput) dateInput.value = todayStr();
 
+  /* 清理历史遗留键：早期版本用它记住"上次查看的日期"，会让占卜页跨天仍停在前一天。
+     现在改为每次进入占卜页都按今天渲染，这个键不再使用。 */
+  try { localStorage.removeItem('divine_last_date'); } catch (e) {}
+
   var viewDivine = document.getElementById('view-divine');
   if (viewDivine) {
     viewDivine.addEventListener('change', function (e) {
       if (e.target.id === 'divine-date-picker') {
         var v = e.target.value;
         if (v && window.MahjongApp && window.MahjongApp.divine) {
-          try { localStorage.setItem('divine_last_date', v); } catch (err) {}
           window.MahjongApp.divine.renderDivine(v);
         }
       }

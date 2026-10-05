@@ -187,6 +187,7 @@
     try { fate.backfill(data.getRecords()); } catch (e) {}
 
     var res = fate.getDay(dateStr, profile);
+    var isToday = dateStr === data.todayStr();
 
     var hints = pickHint(res.seed, res.level);
     var idx = hints.main.indexOf('。');
@@ -207,6 +208,7 @@
       '<div class="divine-date divine-date-line">' +
         '<input type="date" id="divine-date-picker" class="divine-date-input" value="' + escapeHtml(dateStr) + '" />' +
         '<span class="divine-date-lunar"> · ' + escapeHtml(res.lunarText || '') + '</span>' +
+        (isToday ? '' : '<button type="button" class="divine-date-today">回到今天</button>') +
       '</div>' +
       '<p class="divine-level-label">当日麻运</p>' +
       '<div class="divine-level divine-level-' + res.level + '">' +
@@ -297,6 +299,11 @@
       if (e.target.closest('.divine-fate-edit')) {
         e.preventDefault();
         openFatePanel();
+        return;
+      }
+      if (e.target.closest('.divine-date-today')) {
+        e.preventDefault();
+        renderDivine(data.todayStr());
       }
     });
   }

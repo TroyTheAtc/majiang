@@ -16,10 +16,11 @@
       window.MahjongApp.stats.renderStats();
     }
     if (viewId === 'divine' && window.MahjongApp && window.MahjongApp.divine) {
-      /* 优先沿用上次选定的日期（app.js 会写入 divine_last_date），否则用今天 */
-      var lastDate = null;
-      try { lastDate = localStorage.getItem('divine_last_date'); } catch (e) {}
-      window.MahjongApp.divine.renderDivine(lastDate || window.MahjongApp.data.todayStr());
+      /* 每次进入占卜页都按「今天」渲染。
+         以前这里会读 localStorage 里的 divine_last_date（上次选定的日期），
+         于是今天打开时还停在前一天选的日期，看起来像"没刷新"。已去掉这个记忆；
+         要看别的日期，在页面里的日期选择器上选（页面提供了"回到今天"）。 */
+      window.MahjongApp.divine.renderDivine(window.MahjongApp.data.todayStr());
     }
   }
 

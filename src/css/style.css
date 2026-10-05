@@ -503,6 +503,27 @@ body {
   white-space: nowrap;
 }
 
+/* 「回到今天」：只在查看非今天的日期时出现。
+   颜色用 inherit（与旁边的农历文字一致），避免引入新的对比度问题。 */
+.divine-date-today {
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed currentColor;
+  padding: 2px 4px;
+  margin-left: 2px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0.85;
+}
+
+.divine-date-today:active {
+  opacity: 0.5;
+}
+
 .divine-almanac {
   background: linear-gradient(135deg, var(--red-main) 0%, var(--red-light) 50%, #6b0000 100%);
   border: 2px solid var(--gold);
