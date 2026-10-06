@@ -183,6 +183,7 @@
     var container = document.getElementById('divine-content');
     if (!container) return;
     lastDate = '';
+    lockPageSelect(false);
 
     if (!fate) {
       container.innerHTML = '<p class="divine-hint divine-hint-sub">占卜模块未加载，请刷新页面重试。</p>';
@@ -232,6 +233,7 @@
     var btn = holdBtn;
     holdBtn = null;
     if (holdRaf) { cafFn(holdRaf); holdRaf = null; }
+    lockPageSelect(false);
     if (!btn) return;
     btn.classList.remove('is-holding');
     if (done) {
@@ -255,6 +257,7 @@
     if (holdBtn) endHold(false);
     holdBtn = btn;
     holdStartAt = Date.now();
+    lockPageSelect(true);
     btn.classList.add('is-holding');
     setFill(btn, 0);
     holdRaf = rafFn(tick);
@@ -276,6 +279,7 @@
     if (!container) return;
     if (!dateStr) dateStr = data.todayStr();
     lastDate = dateStr;
+    lockPageSelect(false);
 
     if (!fate) {
       container.innerHTML = '<p class="divine-hint divine-hint-sub">占卜模块未加载，请刷新页面重试。</p>';
@@ -401,6 +405,22 @@
     return (t && t.closest) ? t.closest('.divine-draw-btn') : null;
   }
 
+  function inDrawArea(e) {
+    var t = e.target;
+    return !!(t && t.closest && t.closest('.divine-idle'));
+  }
+
+  /* 长按期间临时给整页禁选。
+     只靠 .divine-idle 上的 user-select:none 不够：iOS 的长按选择是
+     跨元素的"连续选择"，起点在按钮上也可能一路扩散选中页面其它文字。
+     所以在按下那一刻把 body 也锁住，松手立刻解锁。 */
+  function lockPageSelect(on) {
+    var b = document.body;
+    if (!b || !b.classList) return;
+    if (on) b.classList.add('is-charging');
+    else b.classList.remove('is-charging');
+  }
+
   if (container) {
     container.addEventListener('click', function (e) {
       if (e.target.closest('.divine-fate-edit')) {
@@ -415,11 +435,27 @@
     });
 
     /* 「开始占卜」是长按蓄力：按下开始填进度，松手/移开即作废。
-       用 touch + mouse 两套（与 longpress.js 同思路），不依赖 PointerEvent。 */
+       用 touch + mouse 两套（与 longpress.js 同思路），不依赖 PointerEvent。
+       注意 passive 必须为 false —— 只有能 preventDefault 才拦得住
+       移动端长按弹出的系统手势（iOS 文本选择/放大镜、Android 复制菜单）。 */
     container.addEventListener('touchstart', function (e) {
       var btn = drawBtnOf(e);
-      if (btn) beginHold(btn);
-    }, { passive: true });
+      if (!btn) return;
+      if (e.cancelable) e.preventDefault();
+      beginHold(btn);
+    }, { passive: false });
+
+    /* 长按唤起的系统「复制/全选」菜单与文本选择，在起卦区域内一律拦掉，
+       否则菜单弹出会打断蓄力（进度条走到一半就废了）。 */
+    container.addEventListener('contextmenu', function (e) {
+      if (inDrawArea(e)) e.preventDefault();
+    });
+    container.addEventListener('selectstart', function (e) {
+      if (inDrawArea(e)) e.preventDefault();
+    });
+    container.addEventListener('dragstart', function (e) {
+      if (inDrawArea(e)) e.preventDefault();
+    });
 
     container.addEventListener('touchmove', function () {
       if (holdBtn) endHold(false);
