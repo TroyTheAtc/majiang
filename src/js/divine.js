@@ -199,7 +199,7 @@
       renderFateBar(profile, null) +
       '<div class="divine-idle">' +
         '<p class="divine-idle-title">今日麻运</p>' +
-        '<p class="divine-idle-sub">按住按钮不放，蓄满即成卦</p>' +
+        '<p class="divine-idle-sub">' + idleSubText() + '</p>' +
         '<button type="button" class="divine-draw-btn">' +
           '<span class="divine-draw-fill" aria-hidden="true"></span>' +
           '<span class="divine-draw-btn-text">开始占卜</span>' +
@@ -208,14 +208,41 @@
       '</div>';
   }
 
-  /* ==================== 起卦（长按蓄力） ==================== */
-  /* 蓄满所需时长与进度条宽度同源：都用这一条的 rAF 推进，
-     所以"进度条填满"与"出结果"发生在同一帧，不会一个先到。 */
-  var HOLD_MS = 1000;
-  var holdRaf = null;
-  var holdStartAt = 0;
-  var holdBtn = null;
-  var halfBuzzed = false;   /* 蓄力过半是否已震过（只在过半时震一次） */
+/* ==================== 起卦（长按蓄力） ==================== */
+/* 蓄满所需时长与进度条宽度同源：都用这一条的 rAF 推进，
+   所以"进度条填满"与"出结果"发生在同一帧，不会一个先到。 */
+var HOLD_MS = 1000;
+/* 兜底时长：部分安卓浏览器（如部分荣耀机型）会在系统长按阈值（约 500ms）处
+   抢先弹出选择/复制菜单、或把手势当作滚动收走，1 秒的蓄力几乎不可能完成。
+   连续几次"按了很久却没成卦"就把时长压到系统阈值以下——仪式感差一点，
+   但至少这个手机能用。只影响当前会话，不落盘。 */
+var HOLD_MS_FALLBACK = 380;
+var holdMs = HOLD_MS;
+var holdFailStreak = 0;
+
+/* 手指抖动容差：按住不动时手指本来就会飘 1~3px。以前任何一次 touchmove
+   都直接作废蓄力，于是"按了却没反应"。超过这个位移才算真的滑走。 */
+var MOVE_TOLERANCE = 14;
+/* 触摸之后浏览器可能补发一整套 mouse 事件。补发的 mousedown 会再走一次
+   beginHold，把蓄力计时重置到 0 —— 表现就是"按满 1 秒也不出结果"。
+   各家内核对 preventDefault 的尊重程度不同，这里用时间戳兜底。 */
+var GHOST_MS = 900;
+var lastTouchAt = 0;
+
+var holdRaf = null;
+var holdStartAt = 0;
+var holdBtn = null;
+var startX = 0;
+var startY = 0;
+var halfBuzzed = false;   /* 蓄力过半是否已震过（只在过半时震一次） */
+
+function idleSubText() {
+  return holdMs === HOLD_MS
+    ? '按住按钮不放，蓄满即成卦'
+    : '按住按钮即成卦（本机长按受限，已自动调短蓄力）';
+}
+
+function isGhostMouse() { return Date.now() - lastTouchAt < GHOST_MS; }
 
   var rafFn = window.requestAnimationFrame
     ? function (cb) { return window.requestAnimationFrame(cb); }
@@ -224,11 +251,17 @@
     ? function (id) { window.cancelAnimationFrame(id); }
     : function (id) { clearTimeout(id); };
 
-  function setFill(btn, ratio) {
-    if (!btn) return;
-    var fill = btn.querySelector('.divine-draw-fill');
-    if (fill) fill.style.width = (Math.max(0, Math.min(1, ratio)) * 100) + '%';
-  }
+function setFill(btn, ratio) {
+  if (!btn) return;
+  var fill = btn.querySelector('.divine-draw-fill');
+  if (fill) fill.style.width = (Math.max(0, Math.min(1, ratio)) * 100) + '%';
+}
+
+/** 从 touch / mouse 事件里取坐标（touch 取触点，mouse 直接取 clientX/Y） */
+function pointOf(e) {
+  var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+  return { x: t.clientX || 0, y: t.clientY || 0 };
+}
 
   /* 震动：iOS Safari 不支持 navigator.vibrate，静默降级即可（不是缺陷） */
   function buzz(pattern) {
@@ -269,9 +302,15 @@
     btn.style.transform = '';
   }
 
-  function endHold(done) {
+  /* 收尾。reason 用来区分"为什么结束"：
+     done   蓄满成卦
+     lift   正常抬手（用户主动放弃，不该算失败）
+     cancel 被中断（系统抢了手势、手指滑走）—— 一定算失败 */
+  function endHold(done, reason) {
     var btn = holdBtn;
+    var startedAt = holdStartAt;
     holdBtn = null;
+    holdStartAt = 0;
     if (holdRaf) { cafFn(holdRaf); holdRaf = null; }
     lockPageSelect(false);
     if (!btn) return;
@@ -281,28 +320,45 @@
       setFill(btn, 1);
       /* 成卦：短-短-长，像"啪"地落定 */
       buzz([18, 40, 70]);
+      holdFailStreak = 0;
       startDraw();
-    } else {
-      setFill(btn, 0);
-      buzz(8);                            /* 半途松手：给一下"泄了"的轻反馈 */
+      return;
     }
+    setFill(btn, 0);
+    buzz(8);                              /* 半途松手：给一下"泄了"的轻反馈 */
+    /* 判断这次是不是"被浏览器抢走了手势"：cancel 一定是；
+       按过了大半却仍没到满，正常松手按不到那么久，也基本是被抢。 */
+    var ratio = startedAt ? (Date.now() - startedAt) / holdMs : 0;
+    if (reason === 'cancel' || ratio >= 0.5) countHoldFailure();
+  }
+
+  function countHoldFailure() {
+    holdFailStreak++;
+    if (holdFailStreak < 3 || holdMs <= HOLD_MS_FALLBACK) return;
+    holdMs = HOLD_MS_FALLBACK;
+    var sub = document.querySelector('.divine-idle-sub');
+    if (sub) sub.textContent = idleSubText();
   }
 
   function tick() {
     if (!holdBtn) return;
-    var r = (Date.now() - holdStartAt) / HOLD_MS;
-    if (r >= 1) { endHold(true); return; }
+    var r = (Date.now() - holdStartAt) / holdMs;
+    if (r >= 1) { endHold(true, 'done'); return; }
     setFill(holdBtn, r);
     applyCharge(holdBtn, r);
     if (!halfBuzzed && r >= 0.5) { halfBuzzed = true; buzz(18); }  /* 过半提示 */
     holdRaf = rafFn(tick);
   }
 
-  function beginHold(btn) {
-    if (holdBtn) endHold(false);
+  function beginHold(btn, point) {
+    /* 同一按钮重复收到按下事件（浏览器补发的 mousedown、touch/mouse 双触发），
+       必须直接忽略：否则计时被重置，怎么按都蓄不满。 */
+    if (holdBtn === btn) return;
+    if (holdBtn) endHold(false, 'cancel');
     holdBtn = btn;
     holdStartAt = Date.now();
     halfBuzzed = false;
+    if (point) { startX = point.x; startY = point.y; }
     lockPageSelect(true);
     btn.classList.add('is-holding');
     setFill(btn, 0);
@@ -382,12 +438,91 @@
   /* ==================== 命主设置面板 ==================== */
   function el(id) { return document.getElementById(id); }
 
+  /* ---------- 生日：年 / 月 / 日 三联动下拉 ----------
+     为什么不用 <input type="date">：小米等手机自带浏览器把原生日期控件渲染成
+     日历，选年份只能一个月一个月地翻，够不着几十年前的出生年。
+     三个 <select> 在任何浏览器里都是滚动列表/滚轮，年份一滑直达；
+     而且能自己约束"不能选未来""按年月算当月天数"这两件事。 */
+  var BIRTH_YEAR_MIN = 1920;
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  /** 当月天数。m 为 1~12：new Date(y, m, 0) 就是"第 m 月的最后一天" */
+  function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+
+  function birthPart(id) {
+    var s = el(id);
+    return s ? (+s.value || 0) : 0;
+  }
+
+  /** 读当前选择 → 'YYYY-MM-DD'；年 / 月 / 日 没选全时返回 '' */
+  function readBirth() {
+    var y = birthPart('birth-year'), m = birthPart('birth-month'), d = birthPart('birth-day');
+    if (!y || !m || !d) return '';
+    return y + '-' + pad2(m) + '-' + pad2(d);
+  }
+
+  /**
+   * 重建三个下拉的选项。preset 传 {y,m,d} 表示按它来选；不传则沿用当前
+   * DOM 里的选择（用户改动后的联动重建走这条）。
+   * 顺手做两件事：不能选未来；选到今年/本月时把月、日的上限收敛。
+   */
+  function syncBirth(preset) {
+    var sy = el('birth-year'), sm = el('birth-month'), sd = el('birth-day');
+    if (!sy || !sm || !sd) return '';
+    var now = new Date();
+    var maxY = now.getFullYear();
+    var y = preset ? (+preset.y || 0) : birthPart('birth-year');
+    var m = preset ? (+preset.m || 0) : birthPart('birth-month');
+    var d = preset ? (+preset.d || 0) : birthPart('birth-day');
+    if (y > maxY) { y = maxY; m = 0; d = 0; }
+
+    /* 年：倒序（今年 → 1920），出生年大多靠后，一进下拉就在附近 */
+    var html = '<option value="0">年</option>';
+    for (var i = maxY; i >= BIRTH_YEAR_MIN; i--) {
+      html += '<option value="' + i + '"' + (i === y ? ' selected' : '') + '>' + i + ' 年</option>';
+    }
+    sy.innerHTML = html;
+
+    if (!y) { m = 0; d = 0; }
+    var maxM = (y && y === maxY) ? now.getMonth() + 1 : 12;
+    if (m > maxM) { m = 0; d = 0; }
+    html = '<option value="0">月</option>';
+    for (i = 1; i <= maxM; i++) {
+      html += '<option value="' + i + '"' + (i === m ? ' selected' : '') + '>' + i + ' 月</option>';
+    }
+    sm.innerHTML = html;
+
+    if (!y || !m) d = 0;
+    var maxD = (y && m) ? daysInMonth(y, m) : 31;
+    if (y === maxY && m === now.getMonth() + 1) maxD = now.getDate();
+    if (d > maxD) d = 0;
+    html = '<option value="0">日</option>';
+    for (i = 1; i <= maxD; i++) {
+      html += '<option value="' + i + '"' + (i === d ? ' selected' : '') + '>' + i + ' 日</option>';
+    }
+    sd.innerHTML = html;
+
+    /* 没选年就不让碰月，没选月就不让碰日：引导按顺序选，也避免半截状态 */
+    sm.disabled = !y;
+    sd.disabled = !y || !m;
+    return readBirth();
+  }
+
+  /** 用 'YYYY-MM-DD'（或空串）设置三个下拉 */
+  function setBirth(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+    return syncBirth(m ? { y: +m[1], m: +m[2], d: +m[3] } : { y: 0, m: 0, d: 0 });
+  }
+
   function updateFateHint() {
     var hint = el('fate-hint');
     if (!hint) return;
-    var birth = el('input-fate-birth') ? el('input-fate-birth').value : '';
+    var birth = readBirth();
     if (!birth) {
-      hint.textContent = '不填生日也能用（按天时推算），填了才算你自己的命。';
+      hint.textContent = birthPart('birth-year')
+        ? '月和日也选上（只选年份不够）。'
+        : '不填生日也能用（按天时推算），填了才算你自己的命。';
       return;
     }
     var dm = fate.getDayMaster(birth);
@@ -400,7 +535,7 @@
     if (!fate) return;
     var p = fate.getProfile();
     if (el('input-fate-nick')) el('input-fate-nick').value = p.nick;
-    if (el('input-fate-birth')) el('input-fate-birth').value = p.birth || '';
+    setBirth(p.birth || '');
     updateFateHint();
     var ov = el('fate-overlay');
     if (ov) { ov.classList.add('is-open'); ov.setAttribute('aria-hidden', 'false'); }
@@ -413,9 +548,10 @@
 
   function saveFatePanel() {
     var nick = el('input-fate-nick') ? el('input-fate-nick').value : '';
-    var birth = el('input-fate-birth') ? el('input-fate-birth').value : '';
-    if (birth && !/^\d{4}-\d{2}-\d{2}$/.test(birth)) {
-      alert('生日格式不正确');
+    var birth = readBirth();
+    /* 下拉本身保证格式合法，只需要拦"选了一半"（例如只选了年） */
+    if (!birth && birthPart('birth-year')) {
+      alert('请把生日选完整（年 / 月 / 日）');
       return;
     }
     fate.saveProfile({ nick: nick, birth: birth });
@@ -427,7 +563,7 @@
   function clearFateBirth() {
     var cur = fate.getProfile();
     fate.saveProfile({ nick: cur.nick, birth: '' });
-    if (el('input-fate-birth')) el('input-fate-birth').value = '';
+    setBirth('');
     updateFateHint();
     syncPageChrome();
     if (lastDate) renderDivine(lastDate); else renderIdle();
@@ -483,14 +619,20 @@
     });
 
     /* 「开始占卜」是长按蓄力：按下开始填进度，松手/移开即作废。
-       用 touch + mouse 两套（与 longpress.js 同思路），不依赖 PointerEvent。
-       注意 passive 必须为 false —— 只有能 preventDefault 才拦得住
-       移动端长按弹出的系统手势（iOS 文本选择/放大镜、Android 复制菜单）。 */
+       用 touch + mouse 两套（与 longpress.js 同思路），不依赖 PointerEvent——
+       PointerEvent 的 pointerdown 早于 touchstart，而只有对 touchstart 调
+       preventDefault 才压得住系统长按手势，所以 touch 不能省。
+
+       passive 必须为 false：只有能 preventDefault，才拦得住移动端长按弹出的
+       系统手势（iOS 文本选择/放大镜、Android 复制菜单），否则那些菜单一弹，
+       蓄力就被 touchcancel 打断 —— 部分安卓机上表现就是"点不动"。 */
     container.addEventListener('touchstart', function (e) {
       var btn = drawBtnOf(e);
       if (!btn) return;
-      if (e.cancelable) e.preventDefault();
-      beginHold(btn);
+      lastTouchAt = Date.now();
+      /* 不放行 e.cancelable 判断：个别内核上它不可靠，包在 try 里更稳 */
+      try { if (e.cancelable !== false) e.preventDefault(); } catch (err) {}
+      beginHold(btn, pointOf(e));
     }, { passive: false });
 
     /* 长按唤起的系统「复制/全选」菜单与文本选择，在起卦区域内一律拦掉，
@@ -505,39 +647,70 @@
       if (inDrawArea(e)) e.preventDefault();
     });
 
-    container.addEventListener('touchmove', function () {
-      if (holdBtn) endHold(false);
+    /* 位移超过容差才算"移开"。按住不动时手指会飘几像素，
+       以前那样"动一点就作废"会让蓄力几乎无法完成。 */
+    container.addEventListener('touchmove', function (e) {
+      if (!holdBtn) return;
+      var p = pointOf(e);
+      if (Math.abs(p.x - startX) > MOVE_TOLERANCE || Math.abs(p.y - startY) > MOVE_TOLERANCE) {
+        endHold(false, 'cancel');
+      }
     }, { passive: true });
 
-    container.addEventListener('touchend', function () {
-      if (holdBtn) endHold(false);
-    }, { passive: true });
+    /* touchend 也 preventDefault：一次掐掉浏览器随后补发的 mouse 事件与 click，
+       免得成卦后又被补发的 mousedown 干扰（按钮不存在时才会走到这里）。 */
+    container.addEventListener('touchend', function (e) {
+      if (!holdBtn) return;
+      try { if (e.cancelable !== false) e.preventDefault(); } catch (err) {}
+      endHold(false, 'lift');
+    }, { passive: false });
 
     container.addEventListener('touchcancel', function () {
-      if (holdBtn) endHold(false);
+      if (holdBtn) endHold(false, 'cancel');
     }, { passive: true });
 
+    /* 桌面端回退。触摸之后补发的那套 mouse 事件一律忽略（时间戳兜底），
+       否则补发的 mousedown 会把蓄力计时重置到 0。 */
     container.addEventListener('mousedown', function (e) {
+      if (isGhostMouse()) return;
       var btn = drawBtnOf(e);
-      if (btn) { e.preventDefault(); beginHold(btn); }
+      if (btn) { e.preventDefault(); beginHold(btn, pointOf(e)); }
+    });
+
+    container.addEventListener('mousemove', function (e) {
+      if (!holdBtn || isGhostMouse()) return;
+      var p = pointOf(e);
+      if (Math.abs(p.x - startX) > MOVE_TOLERANCE || Math.abs(p.y - startY) > MOVE_TOLERANCE) {
+        endHold(false, 'cancel');
+      }
     });
 
     container.addEventListener('mouseup', function () {
-      if (holdBtn) endHold(false);
+      if (isGhostMouse()) return;
+      if (holdBtn) endHold(false, 'lift');
     });
 
     container.addEventListener('mouseleave', function () {
-      if (holdBtn) endHold(false);
+      if (isGhostMouse()) return;
+      if (holdBtn) endHold(false, 'cancel');
     });
   }
 
   function bindFatePanel() {
     var save = el('btn-fate-save');
     var clear = el('btn-fate-clear');
-    var birthInput = el('input-fate-birth');
     if (save) save.addEventListener('click', saveFatePanel);
     if (clear) clear.addEventListener('click', clearFateBirth);
-    if (birthInput) birthInput.addEventListener('change', updateFateHint);
+    ['birth-year', 'birth-month', 'birth-day'].forEach(function (id) {
+      var s = el(id);
+      if (!s) return;
+      s.addEventListener('change', function () {
+        /* 重建时保留当前选择：选到今年/本月会收敛可选项，选到 2 月会重算天数 */
+        syncBirth();
+        updateFateHint();
+      });
+    });
+    setBirth('');   /* 先把选项列表建出来，打开面板时再用真实档案覆盖 */
     document.querySelectorAll('.close-fate-btn').forEach(function (btn) {
       btn.addEventListener('click', closeFatePanel);
     });

@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.5") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.6") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.5") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.6") center / cover no-repeat;
   }
 
   .app::before {
@@ -650,8 +650,11 @@ body {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  /* 交给 JS 全权处理触摸：避免系统把长按当成缩放/滚动/选择手势 */
-  touch-action: manipulation;
+  /* 交给 JS 全权处理触摸：避免系统把长按当成缩放/滚动/选择手势。
+     用 none 而不是 manipulation —— manipulation 仍允许浏览器把"按住 + 轻微移动"
+     识别成滚动，一旦被抢走手势就会发 touchcancel，蓄力当场作废
+     （部分安卓浏览器上表现就是"长按没反应"）。 */
+  touch-action: none;
   -webkit-user-drag: none;
   transition: transform 0.08s ease, opacity 0.12s ease;
 }
@@ -953,6 +956,32 @@ body.is-charging {
   line-height: 1.4;
   color: var(--text-muted);
   text-align: center;
+}
+
+/* 生日三联动下拉：不用 <input type="date">，是因为小米等手机自带浏览器
+   把原生日期控件渲染成日历，选年份只能一个月一个月地翻，够不着出生年。
+   三个 <select> 在各平台都是滚动列表/滚轮，年份一滑直达。 */
+.birth-selects {
+  display: flex;
+  gap: 8px;
+}
+.birth-select {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: 8px 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+  text-align: center;
+  /* 原生下拉箭头保留：一眼能看出"这里可以点开选" */
+}
+.birth-select:disabled {
+  opacity: 0.45;
 }
 
 /* ========== 新增表单 ========== */

@@ -9,15 +9,15 @@
   <meta name="apple-mobile-web-app-title" content="麻将日记" />
   <title>老婆的麻将日记</title>
   <!-- 图标：主屏图标用 icon-180.png（iOS），标签页用 icon-32.png -->
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icon-180.png?v=2.0.5" />
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png?v=2.0.5" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icon-180.png?v=2.0.6" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png?v=2.0.6" />
   <!-- 仅预加载首屏关键脚本；大图与占卜等级图不 preload，按需加载 -->
   <link rel="preload" href="assets/js/solarlunar.min.js" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" /></noscript>
-  <link rel="stylesheet" href="src/css/style.css?v=2.0.5" />
+  <link rel="stylesheet" href="src/css/style.css?v=2.0.6" />
 </head>
 <body>
   <div class="app">
@@ -102,8 +102,15 @@
               <input type="text" id="input-fate-nick" maxlength="12" placeholder="老婆" />
             </div>
             <div class="fate-field">
-              <label for="input-fate-birth">生日（公历）</label>
-              <input type="date" id="input-fate-birth" />
+              <label for="birth-year">生日（公历）</label>
+              <!-- 三联动下拉，不用 <input type="date">：小米等手机自带浏览器把原生
+                   日期控件渲染成日历，选年份只能一个月一个月地翻，够不着出生年。
+                   <select> 在各平台都是滚动列表/滚轮，年份一滑直达。 -->
+              <div class="birth-selects">
+                <select id="birth-year" class="birth-select" aria-label="出生年份"></select>
+                <select id="birth-month" class="birth-select" aria-label="出生月份" disabled></select>
+                <select id="birth-day" class="birth-select" aria-label="出生日期" disabled></select>
+              </div>
             </div>
             <p id="fate-hint" class="fate-hint">不填生日也能用（按天时推算），填了才算你自己的命。</p>
             <button type="button" id="btn-fate-save" class="btn btn-primary btn-block">保存</button>
@@ -182,17 +189,17 @@
   <span class="app-version" id="app-version" aria-hidden="true"></span>
   <!-- 农历与建除：solarlunar 用于展示，lunar-javascript 用于占卜宜忌（建除十二值日） -->
   <script src="assets/js/solarlunar.min.js" defer></script>
-  <script src="assets/js/lunar.min.js?v=2.0.5" defer></script>
-  <script src="src/js/data.js?v=2.0.5" defer></script>
-  <script src="src/js/fate.js?v=2.0.5" defer></script>
-  <script src="src/js/longpress.js?v=2.0.5" defer></script>
-  <script src="src/js/stats.js?v=2.0.5" defer></script>
-  <script src="src/js/view.js?v=2.0.5" defer></script>
-  <script src="src/js/add.js?v=2.0.5" defer></script>
-  <script src="src/js/list.js?v=2.0.5" defer></script>
-  <script src="src/js/divine.js?v=2.0.5" defer></script>
-  <script src="src/js/transfer.js?v=2.0.5" defer></script>
-  <script src="src/js/backup.js?v=2.0.5" defer></script>
-  <script src="src/js/app.js?v=2.0.5" defer></script>
+  <script src="assets/js/lunar.min.js?v=2.0.6" defer></script>
+  <script src="src/js/data.js?v=2.0.6" defer></script>
+  <script src="src/js/fate.js?v=2.0.6" defer></script>
+  <script src="src/js/longpress.js?v=2.0.6" defer></script>
+  <script src="src/js/stats.js?v=2.0.6" defer></script>
+  <script src="src/js/view.js?v=2.0.6" defer></script>
+  <script src="src/js/add.js?v=2.0.6" defer></script>
+  <script src="src/js/list.js?v=2.0.6" defer></script>
+  <script src="src/js/divine.js?v=2.0.6" defer></script>
+  <script src="src/js/transfer.js?v=2.0.6" defer></script>
+  <script src="src/js/backup.js?v=2.0.6" defer></script>
+  <script src="src/js/app.js?v=2.0.6" defer></script>
 </body>
 </html>
