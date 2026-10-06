@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.4") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.5") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.4") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.5") center / cover no-repeat;
   }
 
   .app::before {
@@ -191,7 +191,11 @@ body {
   min-height: 0;
   overflow-y: auto;
   position: relative;
-  z-index: 1;
+  /* 注意：这里不能加 z-index。一旦加了，.main 会自建层叠上下文，
+     把内部弹层（transfer/fate/stats-detail，z-index 100）锁在 z-index:1 这一层，
+     结果就是遮罩被 .header（z-index:10）压穿、弹窗和顶部 tab 重叠。
+     去掉 z-index 后弹层归到 .app/根层叠上下文，100 > 10 正常盖住顶栏。
+     .main 依旧位于 .app::before 遮罩之上（同为定位层，按 DOM 顺序后者在上）。 */
   padding: 16px;
   padding-bottom: calc(24px + var(--safe-bottom));
 }
@@ -1233,6 +1237,8 @@ body.is-charging {
   padding: 20px;
   width: 100%;
   max-width: 340px;
+  /* 内容比屏幕高时靠 margin:auto 从顶部开始排布并可滚动，避免居中溢出被裁 */
+  margin: auto;
 }
 .transfer-desc {
   margin: 0 0 16px;
@@ -1314,7 +1320,13 @@ body.is-charging {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  padding-top: calc(20px + var(--safe-top));
+  padding-bottom: calc(20px + var(--safe-bottom));
   box-sizing: border-box;
+  /* 面板内容过高时可滚动，不再被裁或溢出到顶栏下方 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .transfer-overlay.is-open {
   display: flex;
@@ -1498,7 +1510,12 @@ body.is-charging {
   align-items: center;
   justify-content: center;
   padding: 24px;
+  padding-top: calc(24px + var(--safe-top));
+  padding-bottom: calc(24px + var(--safe-bottom));
   box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .stats-detail-overlay.is-open {
   display: flex;
@@ -1511,6 +1528,7 @@ body.is-charging {
   border: 1px solid var(--tile-border);
   border-radius: var(--radius-tile);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  margin: auto;
 }
 .stats-detail-title {
   font-size: 1.15rem;
