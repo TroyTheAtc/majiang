@@ -9,15 +9,15 @@
   <meta name="apple-mobile-web-app-title" content="麻将日记" />
   <title>老婆的麻将日记</title>
   <!-- 图标：主屏图标用 icon-180.png（iOS），标签页用 icon-32.png -->
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icon-180.png?v=2.0.3" />
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png?v=2.0.3" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icon-180.png?v=2.0.4" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png?v=2.0.4" />
   <!-- 仅预加载首屏关键脚本；大图与占卜等级图不 preload，按需加载 -->
   <link rel="preload" href="assets/js/solarlunar.min.js" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" /></noscript>
-  <link rel="stylesheet" href="src/css/style.css?v=2.0.3" />
+  <link rel="stylesheet" href="src/css/style.css?v=2.0.4" />
 </head>
 <body>
   <div class="app">
@@ -157,13 +157,19 @@
         <!-- 数据导入/导出弹层（从「数据导入/导出」按钮打开） -->
         <div id="transfer-overlay" class="transfer-overlay" aria-hidden="true">
           <div class="transfer-overlay-panel card-tile">
-            <p class="transfer-desc">复制 JSON 备份或粘贴导入</p>
-            <button type="button" id="btn-export-copy" class="btn btn-primary btn-block">复制 JSON</button>
+            <p class="transfer-desc">备份战绩与命主档案，或从备份恢复</p>
+            <button type="button" id="btn-export-share" class="btn btn-primary btn-block">分享备份</button>
+            <button type="button" id="btn-export-file" class="btn btn-outline btn-block">存为文件</button>
+            <button type="button" id="btn-export-copy" class="btn btn-outline btn-block">复制 JSON</button>
+            <p class="transfer-hint">「分享备份」会打开系统面板：选<b>备忘录</b>即存进笔记，选<b>存储到文件</b>即存成 .json。</p>
+            <div class="transfer-restore-sep"></div>
+            <button type="button" id="btn-import-file" class="btn btn-outline btn-block">从文件恢复</button>
             <button type="button" id="btn-import-paste" class="btn btn-outline btn-block">粘贴导入</button>
             <div id="transfer-import-paste-wrap" class="transfer-import-paste-wrap" style="display:none">
               <textarea id="input-import-paste" class="transfer-import-paste-textarea" placeholder="在此粘贴 JSON 数据后点击下方按钮" rows="4"></textarea>
               <button type="button" id="btn-import-paste-confirm" class="btn btn-primary btn-block">确认导入</button>
             </div>
+            <input type="file" id="input-import-file" accept=".json,.txt,application/json,text/plain" hidden />
             <button type="button" class="btn btn-outline btn-block close-transfer-btn">关闭</button>
           </div>
         </div>
@@ -176,17 +182,17 @@
   <span class="app-version" id="app-version" aria-hidden="true"></span>
   <!-- 农历与建除：solarlunar 用于展示，lunar-javascript 用于占卜宜忌（建除十二值日） -->
   <script src="assets/js/solarlunar.min.js" defer></script>
-  <script src="assets/js/lunar.min.js?v=2.0.3" defer></script>
-  <script src="src/js/data.js?v=2.0.3" defer></script>
-  <script src="src/js/fate.js?v=2.0.3" defer></script>
-  <script src="src/js/longpress.js?v=2.0.3" defer></script>
-  <script src="src/js/stats.js?v=2.0.3" defer></script>
-  <script src="src/js/view.js?v=2.0.3" defer></script>
-  <script src="src/js/add.js?v=2.0.3" defer></script>
-  <script src="src/js/list.js?v=2.0.3" defer></script>
-  <script src="src/js/divine.js?v=2.0.3" defer></script>
-  <script src="src/js/transfer.js?v=2.0.3" defer></script>
-  <script src="src/js/backup.js?v=2.0.3" defer></script>
-  <script src="src/js/app.js?v=2.0.3" defer></script>
+  <script src="assets/js/lunar.min.js?v=2.0.4" defer></script>
+  <script src="src/js/data.js?v=2.0.4" defer></script>
+  <script src="src/js/fate.js?v=2.0.4" defer></script>
+  <script src="src/js/longpress.js?v=2.0.4" defer></script>
+  <script src="src/js/stats.js?v=2.0.4" defer></script>
+  <script src="src/js/view.js?v=2.0.4" defer></script>
+  <script src="src/js/add.js?v=2.0.4" defer></script>
+  <script src="src/js/list.js?v=2.0.4" defer></script>
+  <script src="src/js/divine.js?v=2.0.4" defer></script>
+  <script src="src/js/transfer.js?v=2.0.4" defer></script>
+  <script src="src/js/backup.js?v=2.0.4" defer></script>
+  <script src="src/js/app.js?v=2.0.4" defer></script>
 </body>
 </html>

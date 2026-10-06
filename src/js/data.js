@@ -11,7 +11,7 @@
   const DEFAULT_CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
 
   /** 资源版本号：改版本时此处与 index.html 的 ?v= 同步（index.html 无构建，无法自动注入） */
-  const APP_VERSION = '2.0.3';
+  const APP_VERSION = '2.0.4';
 
   /**
    * 本地时区的 YYYY-MM-DD。
