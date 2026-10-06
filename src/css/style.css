@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.2") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.3") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.2") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.3") center / cover no-repeat;
   }
 
   .app::before {
@@ -674,8 +674,15 @@ body {
 }
 
 .divine-draw-btn.is-holding {
-  transform: scale(0.985);
-  box-shadow: 0 0 0 3px rgba(230, 195, 92, 0.35), 0 2px 10px rgba(0, 0, 0, 0.25);
+  /* 蓄力反馈：光晕随进度（--charge 0→1，由 JS 逐帧写入）扩张变亮；
+     transform 交给 JS 逐帧写（抖动），所以这里必须关掉 transition，
+     否则 0.08s 的过渡会把每帧的抖动抹平，看起来只是慢慢歪着。 */
+  transition: none;
+  will-change: transform;
+  box-shadow:
+    0 0 0 calc(2px + var(--charge, 0) * 6px)
+      rgba(230, 195, 92, calc(0.14 + var(--charge, 0) * 0.4)),
+    0 2px 10px rgba(0, 0, 0, 0.25);
 }
 
 /* 蓄力期间整页禁选（JS 在按下/松手时加删）：

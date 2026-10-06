@@ -215,6 +215,7 @@
   var holdRaf = null;
   var holdStartAt = 0;
   var holdBtn = null;
+  var halfBuzzed = false;   /* 蓄力过半是否已震过（只在过半时震一次） */
 
   var rafFn = window.requestAnimationFrame
     ? function (cb) { return window.requestAnimationFrame(cb); }
@@ -229,6 +230,45 @@
     if (fill) fill.style.width = (Math.max(0, Math.min(1, ratio)) * 100) + '%';
   }
 
+  /* 震动：iOS Safari 不支持 navigator.vibrate，静默降级即可（不是缺陷） */
+  function buzz(pattern) {
+    if (!navigator.vibrate) return;
+    try { navigator.vibrate(pattern); } catch (e) {}
+  }
+
+  var reduceMotionCache = null;
+  function prefersReducedMotion() {
+    if (reduceMotionCache === null) {
+      reduceMotionCache = !!(window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+    return reduceMotionCache;
+  }
+
+  /* 蓄力反馈：光晕随进度变强（--charge 交给 CSS），抖动按进度加幅。
+     抖动直接用 inline transform 逐帧写，而不是播一段 CSS keyframes ——
+     因为幅度要跟着进度连续变强，keyframes 里没法按进度调幅。
+     按钮本来每帧就要重绘进度条，顺带写 transform 是零额外开销。 */
+  function applyCharge(btn, ratio) {
+    if (!btn) return;
+    var r = Math.max(0, Math.min(1, ratio));
+    btn.style.setProperty('--charge', r.toFixed(3));
+    if (prefersReducedMotion()) return;   /* 系统要求减少动效：只留光晕，不抖 */
+    var amp = 0.5 + r * 2.2;              /* 抖幅 0.5px → 2.7px，越接近蓄满越颤 */
+    var phase = Math.sin(Date.now() / 18);/* 约 9Hz 的来回，像"运劲" */
+    var dx = amp * phase;
+    var ang = amp * 0.3 * phase;
+    var scale = 0.985 - r * 0.012;        /* 越蓄越紧一点，配合光晕 */
+    btn.style.transform = 'translate3d(' + dx.toFixed(2) + 'px, 0, 0) rotate(' +
+      ang.toFixed(2) + 'deg) scale(' + scale.toFixed(4) + ')';
+  }
+
+  function clearCharge(btn) {
+    if (!btn) return;
+    btn.style.removeProperty('--charge');
+    btn.style.transform = '';
+  }
+
   function endHold(done) {
     var btn = holdBtn;
     holdBtn = null;
@@ -236,12 +276,15 @@
     lockPageSelect(false);
     if (!btn) return;
     btn.classList.remove('is-holding');
+    clearCharge(btn);
     if (done) {
       setFill(btn, 1);
-      if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+      /* 成卦：短-短-长，像"啪"地落定 */
+      buzz([18, 40, 70]);
       startDraw();
     } else {
       setFill(btn, 0);
+      buzz(8);                            /* 半途松手：给一下"泄了"的轻反馈 */
     }
   }
 
@@ -250,6 +293,8 @@
     var r = (Date.now() - holdStartAt) / HOLD_MS;
     if (r >= 1) { endHold(true); return; }
     setFill(holdBtn, r);
+    applyCharge(holdBtn, r);
+    if (!halfBuzzed && r >= 0.5) { halfBuzzed = true; buzz(18); }  /* 过半提示 */
     holdRaf = rafFn(tick);
   }
 
@@ -257,9 +302,12 @@
     if (holdBtn) endHold(false);
     holdBtn = btn;
     holdStartAt = Date.now();
+    halfBuzzed = false;
     lockPageSelect(true);
     btn.classList.add('is-holding');
     setFill(btn, 0);
+    applyCharge(btn, 0);
+    buzz(12);                             /* 起手轻震一下，告诉用户"开始了" */
     holdRaf = rafFn(tick);
   }
 
