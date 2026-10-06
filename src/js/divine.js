@@ -442,7 +442,7 @@ function pointOf(e) {
      为什么不用 <input type="date">：小米等手机自带浏览器把原生日期控件渲染成
      日历，选年份只能一个月一个月地翻，够不着几十年前的出生年。
      三个 <select> 在任何浏览器里都是滚动列表/滚轮，年份一滑直达；
-     而且能自己约束"不能选未来""按年月算当月天数"这两件事。 */
+     月份和天数也能自己算（按年月取当月天数，闰年自动对）。 */
   var BIRTH_YEAR_MIN = 1920;
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
@@ -465,16 +465,17 @@ function pointOf(e) {
   /**
    * 重建三个下拉的选项。preset 传 {y,m,d} 表示按它来选；不传则沿用当前
    * DOM 里的选择（用户改动后的联动重建走这条）。
-   * 顺手做两件事：不能选未来；选到今年/本月时把月、日的上限收敛。
+   * 月固定 1~12、日按当月天数：选生日是挑过去的日子，不跟"今天"较劲。
    */
   function syncBirth(preset) {
     var sy = el('birth-year'), sm = el('birth-month'), sd = el('birth-day');
     if (!sy || !sm || !sd) return '';
-    var now = new Date();
-    var maxY = now.getFullYear();
+    var maxY = new Date().getFullYear();
     var y = preset ? (+preset.y || 0) : birthPart('birth-year');
     var m = preset ? (+preset.m || 0) : birthPart('birth-month');
     var d = preset ? (+preset.d || 0) : birthPart('birth-day');
+    /* 年份列表顶到今年：出生年不可能是未来，列表总得有个头。
+       月、日则一律给全 —— 不因为"选到了今年/本月"就把列表砍短。 */
     if (y > maxY) { y = maxY; m = 0; d = 0; }
 
     /* 年：倒序（今年 → 1920），出生年大多靠后，一进下拉就在附近 */
@@ -484,18 +485,18 @@ function pointOf(e) {
     }
     sy.innerHTML = html;
 
+    /* 月：一律 1~12。早先"选到今年只给到本月"会砍出半截列表，
+       看着像控件坏了；生日本来就是过去的日子，用不着跟今天较劲。 */
     if (!y) { m = 0; d = 0; }
-    var maxM = (y && y === maxY) ? now.getMonth() + 1 : 12;
-    if (m > maxM) { m = 0; d = 0; }
     html = '<option value="0">月</option>';
-    for (i = 1; i <= maxM; i++) {
+    for (i = 1; i <= 12; i++) {
       html += '<option value="' + i + '"' + (i === m ? ' selected' : '') + '>' + i + ' 月</option>';
     }
     sm.innerHTML = html;
 
+    /* 日：按当月天数（闰年 2 月 29 天），同样不卡到今天 */
     if (!y || !m) d = 0;
     var maxD = (y && m) ? daysInMonth(y, m) : 31;
-    if (y === maxY && m === now.getMonth() + 1) maxD = now.getDate();
     if (d > maxD) d = 0;
     html = '<option value="0">日</option>';
     for (i = 1; i <= maxD; i++) {
