@@ -1,6 +1,6 @@
 /**
  * 麻前占卜（渲染层）
- * 算法全部在 fate.js —— 本文件只负责渲染、命主设置与应验对账展示。
+ * 算法全部在 fate.js —— 本文件只负责渲染与命主设置。
  * 鸿蒙对应：pages/DivinePage.ets
  *
  * 刻意保留的设计：
@@ -8,6 +8,11 @@
  *   所以"同人同天同一句、不同人不同句"。
  * - 本层不自行计算档位，只从 fate.getDay() 取；当日结果已被缓存，
  *   不会因为当天补记战绩等原因而在当天内变脸。
+ *
+ * 已移除的功能 ——「应验对账」：
+ * 档位只由（命主 + 日期）决定、从不读战绩，所以它对"今天会不会赢"零信息量，
+ * 对账命中率天然贴着自己的赢日基线；而一个月才十来个打牌日，
+ * 一个 n≈10 的百分比会被当成"准不准"的结论，反过来伤信任。详见 docs/占卜算法说明.md。
  */
 (function () {
   'use strict';
@@ -65,7 +70,6 @@
     ]
   };
 
-  var VERIFY_DAYS = 30;
   var lastDate = '';
 
   function fmtDelta(v) {
@@ -143,39 +147,6 @@
     return html;
   }
 
-  /* ==================== 应验对账 ==================== */
-  function renderVerify(res) {
-    var v;
-    try {
-      v = fate.getVerification(data.getRecords(), VERIFY_DAYS);
-    } catch (e) {
-      return '';
-    }
-    var today = data.todayStr();
-    var html = '<div class="divine-verify">' +
-      '<p class="divine-verify-title">应验对账</p>';
-
-    if (v.today) {
-      var lvName = LEVEL_NAMES[v.today.level] || '';
-      html += '<p class="divine-verify-today ' + (v.today.hit ? 'is-hit' : 'is-miss') + '">' +
-        '今日 ' + escapeHtml(lvName) + ' → 实际 ' + escapeHtml(data.formatAmount(v.today.total)) +
-        (v.today.hit ? ' ✅ 应验' : ' ✖ 未应验') + '</p>';
-    } else if (res.date === today) {
-      html += '<p class="divine-verify-today is-pending">今日还没记战绩，记完自动对账</p>';
-    }
-
-    if (v.total > 0) {
-      html += '<p class="divine-verify-stat">近 ' + v.recentDays + ' 天应验 ' +
-        '<b>' + v.hitCount + '/' + v.total + '</b>（' + Math.round(v.hitRate * 100) + '%）</p>' +
-        '<p class="divine-verify-detail">宜战 ' + v.aggressiveHits + '/' + v.aggressiveTotal +
-        ' · 宜守避损 ' + v.defensiveHits + '/' + v.defensiveTotal + '</p>';
-    } else {
-      html += '<p class="divine-verify-empty">样本还不够 —— 战绩记录会自动与当日麻运核对</p>';
-    }
-    html += '</div>';
-    return html;
-  }
-
   /* ==================== 未占卜：起卦入口 ====================
      进入占卜页先不抛结果，只给「开始占卜」按钮；
      按钮要"长按蓄力"——进度条从左侧填满才成卦（同一人同一天结果恒定）。 */
@@ -191,9 +162,6 @@
     }
 
     var profile = fate.getProfile();
-
-    /* 历史回填：起卦前先把过去的战绩对账数据备好 */
-    try { fate.backfill(data.getRecords()); } catch (e) {}
 
     container.innerHTML =
       renderFateBar(profile, null) +
@@ -392,9 +360,6 @@ function pointOf(e) {
 
     var profile = fate.getProfile();
 
-    /* 历史回填：让"过去有战绩的日子"立刻能参与对账（算法是纯函数，可安全回溯） */
-    try { fate.backfill(data.getRecords()); } catch (e) {}
-
     var res = fate.getDay(dateStr, profile);
     var isToday = dateStr === data.todayStr();
 
@@ -431,8 +396,7 @@ function pointOf(e) {
         '<p class="divine-yi">宜 ' + (res.yi && res.yi.length ? escapeHtml(res.yi.join('、')) : '—') + '</p>' +
         '<p class="divine-ji">忌 ' + (res.ji && res.ji.length ? escapeHtml(res.ji.join('、')) : '—') + '</p>' +
         (almanacExtra.length ? '<p class="divine-extra">' + escapeHtml(almanacExtra.join(' · ')) + '</p>' : '') +
-      '</div>' +
-      renderVerify(res);
+      '</div>';
   }
 
   /* ==================== 命主设置面板 ==================== */

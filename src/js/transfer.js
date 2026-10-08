@@ -23,6 +23,8 @@
       if (r == null || typeof r !== 'object') return false;
       if (typeof r.date !== 'string' || typeof r.category !== 'string') return false;
       if (r.amount !== undefined && typeof r.amount !== 'number') return false;
+      if (r.stake !== undefined && r.stake !== null && typeof r.stake !== 'number') return false;
+      if (r.dahu !== undefined && r.dahu !== null && typeof r.dahu !== 'string') return false;
       if (cats.indexOf(r.category) === -1) return false;
     }
     return true;
@@ -35,7 +37,11 @@
         date: String(r.date || '').slice(0, 10),
         category: String(r.category || ''),
         location: typeof r.location === 'string' ? r.location.trim() : '',
-        amount: r.amount != null ? Number(r.amount) : 0
+        amount: r.amount != null ? Number(r.amount) : 0,
+        /* 旧备份没有底注字段 → 归一成 0（未填），不报错也不丢其他字段 */
+        stake: data.normalizeStake ? data.normalizeStake(r.stake) : 0,
+        /* 今日大胡：旧备份没有 → 空串 */
+        dahu: data.normalizeDahu ? data.normalizeDahu(r.dahu) : ''
       };
     });
   }

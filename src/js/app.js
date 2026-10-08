@@ -77,13 +77,16 @@
       date: form.date.value,
       category: (form.querySelector('[name="category"]:checked') || {}).value || (getCategories()[0] || ''),
       location: form.location.value,
-      amount: amount
+      amount: amount,
+      stake: data.normalizeStake(form.stake.value),
+      dahu: data.normalizeDahu(form.dahu.value)
     };
     /* 写不进去（存储写满 / 无痕模式禁用）时保留表单与编辑态，让用户先备份再重试；
        失败提示由 data.js 统一弹出，这里不重复。 */
     var editingId = add.getEditingId();
     var saved = editingId ? updateRecord(editingId, formData) : addRecord(formData);
     if (!saved) return;
+    if (formData.stake > 0) data.setLastStake(formData.stake);
     add.setEditingId(null);
     form.reset();
     form.date.value = todayStr();

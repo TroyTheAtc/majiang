@@ -33,7 +33,7 @@ html {
 body {
   margin: 0;
   font-family: "ZCOOL KuaiLe", "华文行楷", "STKaiti", "楷体", "KaiTi", "SimKai", cursive;
-  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.7") center / cover no-repeat fixed;
+  background: var(--red-bg) url("../../assets/images/background.jpg?v=2.1.0") center / cover no-repeat fixed;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--text);
@@ -84,7 +84,7 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06);
     transform: scale(min(100vw / 375, 100vh / 812));
     transform-origin: center center;
-    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.0.7") center / cover no-repeat;
+    background: var(--red-bg) url("../../assets/images/background.jpg?v=2.1.0") center / cover no-repeat;
   }
 
   .app::before {
@@ -439,6 +439,27 @@ body {
 
 .record-item .meta .meta-winloss.loss {
   color: var(--loss);
+}
+
+/* 今日大胡：列表里单独一行的金色小徽章 */
+.record-item .record-dahu {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--text);
+  word-break: break-word;
+}
+.record-item .record-dahu-tag {
+  flex: none;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  border-radius: 999px;
+  color: #7a5a00;
+  background: rgba(212, 175, 55, 0.22);
+  border: 1px solid rgba(212, 175, 55, 0.55);
 }
 
 .record-item .amount {
@@ -896,38 +917,6 @@ body.is-charging {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* ---------- 应验对账 ---------- */
-.divine-verify {
-  margin: 16px 0 0;
-  padding: 12px 14px;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  border-radius: var(--radius-tile);
-}
-.divine-verify-title {
-  margin: 0 0 8px;
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  color: var(--red-main);
-}
-.divine-verify-today {
-  margin: 0 0 6px;
-  font-size: 0.88rem;
-  color: var(--text);
-}
-.divine-verify-today.is-hit { color: var(--win); }
-.divine-verify-today.is-miss { color: var(--loss); }
-.divine-verify-today.is-pending,
-.divine-verify-empty {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-.divine-verify-stat { margin: 0 0 4px; font-size: 0.85rem; color: var(--text); }
-.divine-verify-stat b { color: var(--red-main); }
-.divine-verify-detail { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
-
 /* ---------- 命主设置面板 ---------- */
 .fate-field { margin-bottom: 14px; text-align: left; }
 .fate-field label {
@@ -1054,6 +1043,15 @@ body.is-charging {
   outline: none;
   border-color: var(--red-main);
   box-shadow: 0 0 0 2px rgba(139,0,0,0.15);
+}
+
+/* 字段下方的说明（如"底注可不填"） */
+.field-hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 .amount-row {
@@ -1445,14 +1443,18 @@ body.is-charging {
 
 .stats-type-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
 }
 
 .stats-type-btn {
-  flex: 1;
+  /* 四个页签要排得下：允许收缩，窄屏放不下时换行而不是把文字挤爆 */
+  flex: 1 1 0;
+  min-width: 68px;
   min-height: var(--tap-min);
-  font-size: 0.85rem;
+  padding: 0 6px;
+  font-size: 0.8rem;
   color: var(--text);
   text-align: center;
   background: var(--tile-bg);

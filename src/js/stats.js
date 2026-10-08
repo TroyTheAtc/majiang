@@ -27,6 +27,12 @@
         return y === key;
       });
     }
+    if (statsType === 'stake') {
+      /* key 是字符串化的底注值，'0' 代表未填 */
+      return records.filter(function (r) {
+        return String(Number(r.stake) || 0) === String(key);
+      });
+    }
     return [];
   }
 
@@ -278,6 +284,18 @@
           }
         }
         items.push({ name: y + '年', sum: byYear[y], key: y, streakText: streakText, streakClass: streakClass });
+      });
+    } else if (statsType === 'stake') {
+      /* 按底注分组：这是唯一能把"不同量级的牌桌"分开看的口径。
+         没填底注的归到 '0'，名称显示"未填底注"，提醒用户这里数据不全。 */
+      const byStake = {};
+      records.forEach(function (r) {
+        var s = Number(r.stake) || 0;
+        if (byStake[s] === undefined) byStake[s] = 0;
+        byStake[s] += (r.amount || 0);
+      });
+      Object.keys(byStake).map(Number).sort(function (a, b) { return a - b; }).forEach(function (s) {
+        items.push({ name: s > 0 ? s + ' 元底' : '未填底注', sum: byStake[s], key: String(s) });
       });
     }
 

@@ -4,8 +4,9 @@
  *
  * 设计要点（改动前务必读完）
  * 1) 结果是纯函数：PRNG(命主指纹 + 日期)。同一人同一天必然同一结果，不同人不同结果。
- * 2) 占卜**不使用战绩数据**。否则"占卜 vs 战绩"的对账就成了循环论证，毫无说服力。
- *    也正因如此，历史日期可以随时回溯重算——上线当天即有完整对账样本。
+ * 2) 占卜**不使用战绩数据**。所以历史日期可以随时回溯重算，且结果不受"当天补记战绩"影响。
+ *    代价也要说清：它对"今天会不会赢"零信息量，命中率天然贴着用户自己的赢日基线。
+ *    （早期的"应验对账"就是因此下线的：n 只有十几天，那个百分比只会误导。）
  * 3) 当日结果就地缓存（只存档位）。缓存用 profileHash 绑定命主：改生日=换命，自动重算；
  *    缓存同时保证"当天不变脸"（不因当天补记战绩等原因导致当日结果变化）。
  * 4) 参数由离线校准确定，勿随手改。跨 2026–2028 × 100 个生辰交叉验证：
@@ -104,7 +105,7 @@
       birth: obj && obj.birth != null ? obj.birth : cur.birth,
       seed: cur.seed
     });
-    /* 生日变了 = 换命：旧缓存与旧对账口径全部失效 */
+    /* 生日变了 = 换命：旧缓存全部失效 */
     var birthChanged = next.birth !== cur.birth;
     writeProfile(next);
     if (birthChanged) clearCache();
@@ -442,95 +443,6 @@
     return res;
   }
 
-  /**
-   * 历史回填：对已有战绩的日期补算当日麻运。
-   * 因为占卜不含战绩数据，所以可以放心回溯——上线即有对账样本。
-   */
-  function backfill(records, profile) {
-    var prof = profile || getProfile();
-    var ph = profileHash(prof);
-    var cache = readCache();
-    var today = data.todayStr();
-    var seen = {};
-    var added = 0;
-    (records || []).forEach(function (r) {
-      var d = r && r.date;
-      if (!d || seen[d] || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
-      if (d > today) return;               /* 不预支未来 */
-      seen[d] = 1;
-      var hit = cache[d];
-      if (hit && hit.v === CACHE_V && hit.ph === ph) return;
-      cache[d] = { v: CACHE_V, ph: ph, lv: compute(d, prof).level };
-      added++;
-    });
-    if (added) {
-      trimCache(cache);
-      writeCache(cache);
-    }
-    return added;
-  }
-
-  /* ==================== 应验对账（占卜 vs 实际战绩） ==================== */
-  /**
-   * 判定口径：
-   *   吉/大吉 → 当日有赢即应验
-   *   宜守     → 当日未赢（≤0）即应验（即"避损"）
-   *   平       → 无倾向，不参与判定
-   * 只有"同一命主算过"的日期参与，避免改生日后新旧结果混在一起。
-   */
-  function getVerification(records, recentDays) {
-    recentDays = recentDays || 30;
-    var byDate = {};
-    (records || []).forEach(function (r) {
-      if (!r || !r.date) return;
-      var amt = Number(r.amount) || 0;
-      byDate[r.date] = (byDate[r.date] || 0) + amt;
-    });
-
-    var cache = readCache();
-    var ph = profileHash(getProfile());
-    var rows = [];
-    Object.keys(byDate).forEach(function (d) {
-      var c = cache[d];
-      if (!c || c.v !== CACHE_V || c.ph !== ph) return;
-      if (c.lv === 1) return;
-      var total = byDate[d];
-      rows.push({
-        date: d,
-        level: c.lv,
-        total: total,
-        hit: c.lv >= 2 ? total > 0 : total <= 0
-      });
-    });
-    rows.sort(function (a, b) { return b.date.localeCompare(a.date); });
-
-    var today = data.todayStr();
-    var todayRow = null;
-    for (var i = 0; i < rows.length; i++) {
-      if (rows[i].date === today) { todayRow = rows[i]; break; }
-    }
-
-    var cutoff = data.todayStr(Date.now() - recentDays * 86400000);
-    var recent = rows.filter(function (r) { return r.date >= cutoff; });
-    var aggressive = recent.filter(function (r) { return r.level >= 2; });
-    var defensive = recent.filter(function (r) { return r.level === 0; });
-    var hits = recent.filter(function (r) { return r.hit; }).length;
-
-    return {
-      today: todayRow,
-      all: rows,
-      recent: recent,
-      recentDays: recentDays,
-      hitCount: hits,
-      total: recent.length,
-      hitRate: recent.length ? hits / recent.length : 0,
-      aggressiveTotal: aggressive.length,
-      aggressiveHits: aggressive.filter(function (r) { return r.hit; }).length,
-      defensiveTotal: defensive.length,
-      defensiveHits: defensive.filter(function (r) { return r.hit; }).length
-    };
-  }
-
   /* ==================== 导入导出 ==================== */
   function getExportProfile() {
     var p = getProfile();
@@ -567,9 +479,7 @@
     getDayMaster: getDayMaster,
     compute: compute,
     getDay: getDay,
-    backfill: backfill,
     clearCache: clearCache,
-    getVerification: getVerification,
     getExportProfile: getExportProfile,
     applyImportProfile: applyImportProfile,
     /* 确定性随机 0~1：渲染层取文案也走它，保证"同人同天同一句" */

@@ -105,11 +105,21 @@
       const hideMeta = getHideAmounts();
       const locationStr = hideMeta ? '**' : escapeHtml(location);
       const categoryStr = hideMeta ? '**' : escapeHtml(r.category || '—');
-      const meta = '<span class="meta-winloss ' + amountClass + '">' + winLossWord + '</span> ' + locationStr + '·' + categoryStr;
+      /* 底注：没填就不显示，避免每条都拖一个"底注 —"的尾巴 */
+      const stakeVal = Number(r.stake) || 0;
+      const stakeStr = stakeVal > 0 ? ' · 底' + (hideMeta ? '**' : stakeVal) : '';
+      const meta = '<span class="meta-winloss ' + amountClass + '">' + winLossWord + '</span> ' + locationStr + '·' + categoryStr + stakeStr;
+      /* 今日大胡：单独一行小徽章。混进 meta 会把那行挤到换行，看不清；这里不隐藏
+         （它不是金额，眼睛按钮只管钱） */
+      const dahu = (r.dahu || '').trim();
+      const dahuHtml = dahu
+        ? '<div class="record-dahu"><span class="record-dahu-tag">大胡</span>' + escapeHtml(dahu) + '</div>'
+        : '';
       li.innerHTML =
         '<div class="left">' +
           '<div class="date">' + escapeHtml(r.date) + '</div>' +
           '<div class="meta">' + meta + '</div>' +
+          dahuHtml +
         '</div>' +
         '<span class="amount ' + amountClass + '">' + formatAmount(r.amount) + '</span>' +
         '<div class="record-actions">' +

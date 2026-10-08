@@ -43,6 +43,11 @@
     if (!form) return;
     form.date.value = record.date || '';
     form.location.value = record.location || '';
+    var stakeInput = form.querySelector('[name="stake"]');
+    var stake = data.normalizeStake(record.stake);
+    if (stakeInput) stakeInput.value = stake > 0 ? String(stake) : '';
+    var dahuInput = form.querySelector('[name="dahu"]');
+    if (dahuInput) dahuInput.value = data.normalizeDahu(record.dahu);
     var catRadio = findCategoryRadio(form, record.category || '');
     if (catRadio) catRadio.checked = true;
     var amt = Number(record.amount) || 0;
@@ -69,6 +74,12 @@
       form.reset();
       var dateInput = form.querySelector('[name="date"]');
       if (dateInput) dateInput.value = todayStr();
+      /* 底注预填上次用过的值：大概率一直打同一个底，省得每次重输 */
+      var stakeInput = form.querySelector('[name="stake"]');
+      if (stakeInput) {
+        var lastStake = data.getLastStake ? data.getLastStake() : 0;
+        stakeInput.value = lastStake > 0 ? String(lastStake) : '';
+      }
     }
     renderCategoryOptions();
   }

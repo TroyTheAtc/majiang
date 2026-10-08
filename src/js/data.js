@@ -8,10 +8,11 @@
   const STORAGE_KEY = 'mahjong_records';
   const HIDE_AMOUNTS_KEY = 'mahjong_hide_amounts';
   const CATEGORIES_KEY = 'mahjong_categories';
+  const LAST_STAKE_KEY = 'mahjong_last_stake';
   const DEFAULT_CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
 
   /** 资源版本号：改版本时此处与 index.html 的 ?v= 同步（index.html 无构建，无法自动注入） */
-  const APP_VERSION = '2.0.7';
+  const APP_VERSION = '2.1.0';
 
   /**
    * 本地时区的 YYYY-MM-DD。
@@ -81,6 +82,48 @@
     return true;
   }
 
+  /**
+   * 底注（每底的金额）。0 表示"没填"。
+   *
+   * 为什么要有这个字段：+500 在 5 元底的桌和 50 元底的桌完全不是一回事，
+   * 没有它，所有按金额的统计都把不同量级的牌局混在一起算。
+   */
+  function normalizeStake(v) {
+    const n = Number(v);
+    return n > 0 && isFinite(n) ? Math.round(n) : 0;
+  }
+
+  /**
+   * 今日大胡：一行自由文本（如"清一色、碰碰胡"），留空表示没记。
+   *
+   * 为什么不做成"有/无"开关或多选：大胡的牌型各地叫法不一（清一色 / 碰碰胡 /
+   * 十三幺 / 大三元……），写死选项一定漏；让人自己填一句最省事，也不会因为
+   * 选项不匹配而记不下去。长度截到 DAHU_MAX，避免一条备注把列表撑爆。
+   */
+  const DAHU_MAX = 40;
+
+  function normalizeDahu(v) {
+    if (v == null) return '';
+    return String(v).replace(/\s+/g, ' ').trim().slice(0, DAHU_MAX);
+  }
+
+  /** 上次用过的底注：搓一把时预填，省得每次重输（大概率就一直打同一个底） */
+  function getLastStake() {
+    try {
+      return normalizeStake(localStorage.getItem(LAST_STAKE_KEY));
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function setLastStake(v) {
+    const n = normalizeStake(v);
+    if (!n) return;
+    try {
+      localStorage.setItem(LAST_STAKE_KEY, String(n));
+    } catch (e) {}
+  }
+
   function getHideAmounts() {
     try {
       return localStorage.getItem(HIDE_AMOUNTS_KEY) === '1';
@@ -128,7 +171,9 @@
       date: record.date,
       category: record.category,
       location: (record.location || '').trim(),
-      amount: record.amount
+      amount: record.amount,
+      stake: normalizeStake(record.stake),
+      dahu: normalizeDahu(record.dahu)
     });
     return saveRecords(list);
   }
@@ -148,7 +193,9 @@
       date: record.date,
       category: record.category,
       location: (record.location || '').trim(),
-      amount: record.amount
+      amount: record.amount,
+      stake: normalizeStake(record.stake),
+      dahu: normalizeDahu(record.dahu)
     };
     return saveRecords(list);
   }
@@ -183,12 +230,18 @@
     STORAGE_KEY: STORAGE_KEY,
     HIDE_AMOUNTS_KEY: HIDE_AMOUNTS_KEY,
     CATEGORIES_KEY: CATEGORIES_KEY,
+    LAST_STAKE_KEY: LAST_STAKE_KEY,
     APP_VERSION: APP_VERSION,
     todayStr: todayStr,
     getCategories: getCategories,
     saveCategories: saveCategories,
     addCategory: addCategory,
     removeCategory: removeCategory,
+    DAHU_MAX: DAHU_MAX,
+    normalizeStake: normalizeStake,
+    normalizeDahu: normalizeDahu,
+    getLastStake: getLastStake,
+    setLastStake: setLastStake,
     getHideAmounts: getHideAmounts,
     setHideAmounts: setHideAmounts,
     getRecords: getRecords,

@@ -9,15 +9,15 @@
   <meta name="apple-mobile-web-app-title" content="麻将日记" />
   <title>老婆的麻将日记</title>
   <!-- 图标：主屏图标用 icon-180.png（iOS），标签页用 icon-32.png -->
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icon-180.png?v=2.0.7" />
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png?v=2.0.7" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/icon-180.png?v=2.1.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png?v=2.1.0" />
   <!-- 仅预加载首屏关键脚本；大图与占卜等级图不 preload，按需加载 -->
   <link rel="preload" href="assets/js/solarlunar.min.js" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@600;700&display=swap" /></noscript>
-  <link rel="stylesheet" href="src/css/style.css?v=2.0.7" />
+  <link rel="stylesheet" href="src/css/style.css?v=2.1.0" />
 </head>
 <body>
   <div class="app">
@@ -79,12 +79,22 @@
             <input type="text" id="field-location" name="location" placeholder="如：家里、茶楼" maxlength="20" />
           </div>
           <div class="field">
+            <label for="field-stake">底注</label>
+            <input type="number" id="field-stake" name="stake" placeholder="每底的金额，如 5" min="0" step="1" />
+            <p class="field-hint">可不填。填了才能比较：+500 在 5 元底和 50 元底的桌不是一回事。</p>
+          </div>
+          <div class="field">
             <label for="field-amount">战绩</label>
             <div class="amount-row">
               <label class="chip chip-win"><input type="radio" name="winloss" value="win" required /><span>赢</span></label>
               <label class="chip chip-loss"><input type="radio" name="winloss" value="loss" /><span>输</span></label>
             </div>
             <input type="number" id="field-amount" name="amount" placeholder="输入比分" min="0" step="1" required />
+          </div>
+          <div class="field">
+            <label for="field-dahu">今日大胡</label>
+            <input type="text" id="field-dahu" name="dahu" placeholder="如：清一色、碰碰胡" maxlength="40" />
+            <p class="field-hint">胡了大牌就记一笔，可留空。牌型各地叫法不一，自己怎么写都行。</p>
           </div>
           <button type="submit" class="btn btn-primary">保存</button>
         </form>
@@ -139,6 +149,7 @@
             <button type="button" class="stats-type-btn active" data-type="category">按对象统计</button>
             <button type="button" class="stats-type-btn" data-type="location">按地点统计</button>
             <button type="button" class="stats-type-btn" data-type="year">按年份统计</button>
+            <button type="button" class="stats-type-btn" data-type="stake">按底注统计</button>
           </div>
           <ul id="stats-category-list"></ul>
         </div>
@@ -189,17 +200,17 @@
   <span class="app-version" id="app-version" aria-hidden="true"></span>
   <!-- 农历与建除：solarlunar 用于展示，lunar-javascript 用于占卜宜忌（建除十二值日） -->
   <script src="assets/js/solarlunar.min.js" defer></script>
-  <script src="assets/js/lunar.min.js?v=2.0.7" defer></script>
-  <script src="src/js/data.js?v=2.0.7" defer></script>
-  <script src="src/js/fate.js?v=2.0.7" defer></script>
-  <script src="src/js/longpress.js?v=2.0.7" defer></script>
-  <script src="src/js/stats.js?v=2.0.7" defer></script>
-  <script src="src/js/view.js?v=2.0.7" defer></script>
-  <script src="src/js/add.js?v=2.0.7" defer></script>
-  <script src="src/js/list.js?v=2.0.7" defer></script>
-  <script src="src/js/divine.js?v=2.0.7" defer></script>
-  <script src="src/js/transfer.js?v=2.0.7" defer></script>
-  <script src="src/js/backup.js?v=2.0.7" defer></script>
-  <script src="src/js/app.js?v=2.0.7" defer></script>
+  <script src="assets/js/lunar.min.js?v=2.1.0" defer></script>
+  <script src="src/js/data.js?v=2.1.0" defer></script>
+  <script src="src/js/fate.js?v=2.1.0" defer></script>
+  <script src="src/js/longpress.js?v=2.1.0" defer></script>
+  <script src="src/js/stats.js?v=2.1.0" defer></script>
+  <script src="src/js/view.js?v=2.1.0" defer></script>
+  <script src="src/js/add.js?v=2.1.0" defer></script>
+  <script src="src/js/list.js?v=2.1.0" defer></script>
+  <script src="src/js/divine.js?v=2.1.0" defer></script>
+  <script src="src/js/transfer.js?v=2.1.0" defer></script>
+  <script src="src/js/backup.js?v=2.1.0" defer></script>
+  <script src="src/js/app.js?v=2.1.0" defer></script>
 </body>
 </html>
