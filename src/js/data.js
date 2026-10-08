@@ -12,7 +12,7 @@
   const DEFAULT_CATEGORIES = ['机场', '家人', '同事', '同学', '朋友'];
 
   /** 资源版本号：改版本时此处与 index.html 的 ?v= 同步（index.html 无构建，无法自动注入） */
-  const APP_VERSION = '2.1.0';
+  const APP_VERSION = '2.1.1';
 
   /**
    * 本地时区的 YYYY-MM-DD。
@@ -87,10 +87,15 @@
    *
    * 为什么要有这个字段：+500 在 5 元底的桌和 50 元底的桌完全不是一回事，
    * 没有它，所有按金额的统计都把不同量级的牌局混在一起算。
+   *
+   * 允许小数（2.5 / 0.5 这种底注是真实存在的），保留两位小数：
+   * 一是和输入框 step="0.01" 对齐，二是防止浮点噪声（2.5 存成 2.5000000000000004）
+   * 把「按底注统计」的分组键拆成两组。
    */
   function normalizeStake(v) {
     const n = Number(v);
-    return n > 0 && isFinite(n) ? Math.round(n) : 0;
+    if (!(n > 0) || !isFinite(n)) return 0;
+    return Math.round(n * 100) / 100;
   }
 
   /**
