@@ -15,9 +15,19 @@
     return data.saveRecords(records);
   }
 
+  /**
+   * 备份内容校验：只查"格式对不对"，不查"业务上合不合法"。
+   *
+   * 这里曾经有一条额外校验，要求记录里的对象必须存在于**当前**对象列表中。
+   * 但删除对象不会清理历史记录，于是只要删过任何一个对象，之后导出的备份就必然
+   * 带着它的名字，恢复时整份被拒（提示还只有一句"数据格式不符合要求"，看不出原因）。
+   * **备份的意义就是能恢复**，这条必须去掉。
+   *
+   * 配置表只该管"录入时候选什么"，不该当作历史数据合法性的判据：
+   * 删过的对象、改过名字的人，它们的旧记录都仍然合法。
+   */
   function validateRecords(arr) {
     if (!Array.isArray(arr)) return false;
-    var cats = (data.getCategories && data.getCategories()) || [];
     for (var i = 0; i < arr.length; i++) {
       var r = arr[i];
       if (r == null || typeof r !== 'object') return false;
@@ -25,7 +35,6 @@
       if (r.amount !== undefined && typeof r.amount !== 'number') return false;
       if (r.stake !== undefined && r.stake !== null && typeof r.stake !== 'number') return false;
       if (r.dahu !== undefined && r.dahu !== null && typeof r.dahu !== 'string') return false;
-      if (cats.indexOf(r.category) === -1) return false;
     }
     return true;
   }
